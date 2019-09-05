@@ -1,0 +1,93 @@
+\documentclass[orivec]{llncs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{wrapfig}
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{listings, framed}
+\lstset{
+  language=Java,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\ttfamily},
+  frame=l,
+  numbers=left,
+  numberstyle={\ttfamily},
+%  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  escapechar=|
+}
+\usepackage{algorithm, algorithmic}
+\usepackage{url}
+\usepackage{relsize}
+\usepackage{xcolor}
+\usepackage{multirow}
+
+\newif\iflongversion
+\longversionfalse               % for conference version
+%\longversiontrue                % for technical report
+
+% \|name| or \mathid{name} denotes identifiers and slots in formulas
+\def\|#1|{\mathid{#1}}
+\newcommand{\mathid}[1]{\ensuremath{\mathit{#1}}}
+% \<name> or \codeid{name} denotes computer code identifiers
+\def\codesize{\smaller}
+\def\<#1>{\codeid{#1}}
+\newcommand{\codeid}[1]{\ifmmode{\mbox{\codesize\ttfamily{#1}}}\else{\codesize\ttfamily #1}\fi}
+
+\newcommand{\todo}[1]{{\color{red}\bfseries [[#1]]}}
+
+\newcommand{\fs}[1]{\todo{FS: #1}}
+
+% Reduce padding for \boxed
+\setlength{\fboxsep}{.5\fboxsep}
+
+\newcommand{\wrt}{\textit{w.r.t.\ }}
+\newcommand{\ie}{, \textit{i.e.}, }
+\newcommand{\loc}{\mathbb{L}}
+\newcommand{\nil}{{\ensuremath{\mathord{\codeid{null}}} }}
+\newcommand{\sep}{\mathop{\mid\!\mid}}
+\newcommand{\append}{\!::\!}
+\newcommand{\locations}{\ensuremath{\mathbb{L}}}
+\newcommand{\objects}{\ensuremath{\mathbb{O}}}
+\newcommand{\classes}{\ensuremath{\mathbb{K}}}
+\newcommand*{\tto}{{\begin{array}{c}\rightarrow\\[-1ex]\rightarrow\end{array}}}
+\newcommand*{\ttob}{{\tto
+    \mbox{\scriptsize$\begin{array}{c}b_1\\[-1ex]\cdots\\[-1ex]b_m\end{array}$}}}
+\newcommand*{\ttotwo}[2]{{\tto
+    \mbox{\scriptsize$\begin{array}{c}{#1}\\[-1ex]{#2}\end{array}$}}}
+\newcommand*{\ttoone}[1]{{\rightarrow
+    \mbox{\scriptsize$\begin{array}{c}{#1}\end{array}$}}}
+\newcommand{\inputv}[1]{\check{{#1}}}
+\newcommand{\outputv}[1]{\hat{{#1}}}
+\newcommand{\inputt}{\inputv{\mathit{tainted}}}
+\newcommand{\outputt}{\outputv{\mathit{tainted}}}
+\newcommand{\inter}[1]{\left[\!\left[{#1}\right]\!\right]}
+\newcommand{\interlarge}[1]{\left[\!\!\left[{#1}\right]\!\!\right]}
+\newcommand*{\block}[2]{\fbox{\scriptsize${#1}$}^{\,{#2}}\hspace*{-1ex}}
+%
+\begin{document}
+%
+\begin{frontmatter}
+\title{Enforcing Determinism to Java Smart Contracts}
+\author{Fausto Spoto}
+\institute{Dipartimento di Informatica, Universit\`a di Verona, Italy\\
+  \email{fausto.spoto@univr.it}}
+%
+\maketitle
+%
+\begin{abstract}
+  bla bla bla
+\end{abstract}
+%
+\end{frontmatter}
+
+\input{introduction}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{plain}
+\bibliography{biblio}
+
+\end{document}

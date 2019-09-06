@@ -5,6 +5,7 @@
 \usepackage{stmaryrd}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
+\usepackage{array}
 \usepackage{listings, framed}
 \lstset{
   language=Java,
@@ -24,6 +25,11 @@
 \usepackage{relsize}
 \usepackage{xcolor}
 \usepackage{multirow}
+
+\newcommand{\PreserveBackslash}[1]{\let\temp=\\#1\let\\=\temp}
+\newcolumntype{C}[1]{>{\PreserveBackslash\centering}p{#1}}
+\newcolumntype{R}[1]{>{\PreserveBackslash\raggedleft}p{#1}}
+\newcolumntype{L}[1]{>{\PreserveBackslash\raggedright}p{#1}}
 
 \newif\iflongversion
 \longversionfalse               % for conference version

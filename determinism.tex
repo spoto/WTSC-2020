@@ -1,1 +1,97 @@
-\section{Determinism for Java Smart Contracts}\label{sec:determinism}
+\section{Determinism for Java Methods in Smart Contracts}\label{sec:determinism}
+
+This section discusses the different kinds of determinism of methods from
+the Java library and what must be required if such methods are used
+in a language for smart contracts.
+We recall that the Java library exists in different versions, from its first
+$1.0$ edition of 1996 to its $13$ edition expected to ship in September 2019.
+Each version has different implementations, with OpenJDK probably being
+the most used, nowadays. Some classes and methods exist only in some versions of the library.
+For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
+while class \<java.util.Collection> was introduced in version $1.2$.
+In the following, when discussing a specific methods, we assume that a version
+of the Java library is used, where the class and the same method exist.
+Moreover, we report fully qualified names of classes only the first time they are cited.
+
+Fig.~\ref{fig:determinism} reports some examples of methods
+from the Java library, classified
+on the basis of the kind of determinism that holds for them.
+We discuss them below. Since Java is an object-oriented language,
+a non-static method can always be called on any object whose class
+is a subtype of that where the method is defined. For instance, method \<Number.intValue()> in
+Fig.~\ref{fig:determinism} can be called on any object that extends
+\<java.lang.Number> and that call, at run time, might
+execute any implementation of \<intValue()> in any subtype of \<Number>
+(such as in \<java.lang.Integer> or in \<java.lang.Double>).
+Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
+deterministic, this means that that is true for every implementation of
+\<intValue()> in the subtypes of \<Number> of the Java library.
+
+Many methods of the Java library are clearly deterministic. Their behavior is fixed
+and does not change with distinct versions of the library. An example is the unwrapping
+method \<intValue()> of \<Number> (Fig.~\ref{fig:determinism}). It yields
+the primitive \<int> value corresponding to any object of the abstract class \<Number>.
+Examples are objects of class \<java.lang.Integer> or \<java.lang.Double>. For instance,
+\[
+\<new Integer(3).intValue() == 3>
+\]
+holds in any version of the Java library, as well as
+\[
+\<new Double(3.14).intValue() == 3>
+\]
+since truncation of \<double> into \<int> is machine-independent in Java.
+Hence, a language for smart contracts, that must require determinism,
+can safely allow the use of that method, always.
+
+\begin{figure}[t]
+  \begin{center}
+    \begin{tabular}{|l||C{1cm}|C{1.25cm}|C{1.57cm}|C{1cm}|}
+      \hline
+      \multicolumn{1}{|c||}{\multirow{3}{*}{\textbf{Method}}} & \multicolumn{4}{ c| }{\textbf{Deterministic?}}\\\cline{2-5}
+      & \multirow{2}{*}{always} & \multirow{2}{*}{platform} & platform + & \multirow{2}{*}{never} \\
+      & & & conditions & \\\hline\hline
+      \<Number.intValue()> & \checkmark &   &   & \\\hline
+      \<Integer.valueOf(int i)> & & \checkmark & & \\\hline
+      \<System.currentTimeMillis()> & & & & \checkmark \\\hline
+      \<BaseStream$\text{<}$T,S$\text{>}$.parallel()> & & & & \checkmark \\\hline
+      \<Object.hashCode()> & & & \checkmark & \\\hline
+      \<Object.toString()> & & & \checkmark & \\\hline
+      \<Collection$\text{<}$E$\text{>}$.iterator()> & & & \checkmark & \\\hline
+      \<Collection$\text{<}$E$\text{>}$.stream()> & & & \checkmark & \\\hline
+      \<Collection$\text{<}$E$\text{>}$.add(E e)> & & & \checkmark & \\\hline
+      \<HashSet(Collection$\text{<}$? extends E$\text{>}$ c)> & & & \checkmark & \\\hline
+      \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)> & & & \checkmark & \\\hline
+      \multicolumn{1}{c}{} & \multicolumn{3}{c}{\upbracefill}\\
+      \multicolumn{1}{c}{} & \multicolumn{3}{c}{white-listed}\\
+    \end{tabular}
+  \end{center}
+  \caption{Some methods of the Java library, with their deterministic behavior.
+\emph{Always} means that a method is deterministic, in any
+version and implementation of the Java library. \emph{Platform} means that
+a method is deterministic only once a specific implementation
+of the library is fixed. \emph{Platform + conditions} means that a method
+is deterministic only if an implementation of the library is fixed
+\emph{and} the program satisfies extra conditions, that typically refer to
+the actual arguments passed to the method at run time. \emph{Never} means
+that a method can have different behaviors in distinct executions,
+even after fixing the library implementation of the actual arguments, and no
+condition can be sensibly devised to make it deterministic.}\label{fig:determinism}
+\end{figure}
+
+Consider the static method \<Integer.valueOf(int i)> now. It performs the inverse operation of wrapping
+a primitive \<int> value into an object of class \<Integer>. It might be surprising, but its behavior
+can be different in distinct implementations of the Java library. For instance,
+\[
+\<Integer.valueOf(3) == Integer.valueOf(3)>
+\]
+holds, in every implementation of the library, since the official documentation requires this method
+to cache values between $-128$ and $127$, inclusive. But there is no guarantee that caching is
+used outside that range, so that
+\[
+\<Integer.valueOf(2019) == Integer.valueOf(2019)>
+\]
+might be true in some implementations and false in others, that yield distinct objects for the two calls.
+We call \emph{platform deterministic} such methods, since they are deterministic only once a specific
+implementation (\emph{platform}) of the Java library is fixed. Such methods can be used in smart contracts,
+but the requirement that nodes use a specific version of the Java library must be included
+in the consensus rules.

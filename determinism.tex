@@ -59,23 +59,24 @@ can safely allow the use of that method, always.
       \<Collection$\text{<}$E$\text{>}$.iterator()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.stream()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.add(E e)> & & & \checkmark & \\\hline
-      \<HashSet(Collection$\text{<}$? extends E$\text{>}$ c)> & & & \checkmark & \\\hline
       \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)> & & & \checkmark & \\\hline
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{\upbracefill}\\
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{white-listed}\\
     \end{tabular}
   \end{center}
-  \caption{Some methods of the Java library, with their deterministic behavior.
-\emph{Always} means that a method is deterministic, in any
-version and implementation of the Java library. \emph{Platform} means that
-a method is deterministic only once a specific implementation
+  \caption{Some methods of the Java library, with their behavior \emph{wrt.} code determinism.
+\emph{Always} means that a method does not compromise code determinism.
+\emph{Platform} means that
+a method does not compromise determinism, but only once a specific implementation
 of the library is fixed. \emph{Platform + conditions} means that a method
-is deterministic only if an implementation of the library is fixed
+does not compromise determinism, but only if an implementation of the library is fixed
 \emph{and} the program satisfies extra conditions, that typically refer to
-the actual arguments passed to the method at run time. \emph{Never} means
+the actual arguments passed to the method at run time or to if and how
+other methods are called. \emph{Never} means
 that a method can have different behaviors in distinct executions,
 even after fixing the library implementation of the actual arguments, and no
-condition can be sensibly devised to make it deterministic.}\label{fig:determinism}
+condition can be sensibly devised to guarantee that it does not compromise code
+determinism.}\label{fig:determinism}
 \end{figure}
 
 Consider the static method \<Integer.valueOf(int i)> now. It performs the inverse operation of wrapping
@@ -95,3 +96,60 @@ We call \emph{platform deterministic} such methods, since they are deterministic
 implementation (\emph{platform}) of the Java library is fixed. Such methods can be used in smart contracts,
 but the requirement that nodes use a specific version of the Java library must be included
 in the consensus rules.
+
+Consider the static method \<System.currentTimeMillis()> of \<java.lang.System>.
+It yields the number of milliseconds elapsed since the beginning of 1970.
+Not surprisingly, code using that method will get diffrent measures for distinct calls.
+Such inherently non-deterministic methods cannot be accepted in a smart contract.
+Method \<parallel()> of the \<java.util.stream.BaseStream> class, instead,
+yields a parallel version of a stream. Introduced in Java 8, streams are
+an abstract description of a lazy enumeration algorithm over values.
+They are meant to implement the map/reduce design pattern. Their specification
+makes heavy use of lamba expressions. For instance, consider following code
+%
+\begin{verbatim}
+List<Integer> list = ...
+int positive = list.stream().parallel()
+  .mapToInt(Integer::intValue)
+  .filter(i -> i > 0)
+  .findAny()
+  .getAsInt();
+\end{verbatim}
+%
+and assume that \<list> contains at least a positive \<Integer>.
+The code above processes \<list> by defining a parallel algorithm
+that unwraps each element into its corresponding \<int> primitive value,
+filters only the positive values and then selects any of them.
+The result of \<findAny()> is an optional value, hence the
+\<getAsInt()> call is needed at the end. Since the algorithm is
+parallel, each execution of the code might select a different
+positive element, depending on thread scheduling. Hence, \<parallel()>
+cannot be allowed in a smart contract. Note that the same gas consumption
+of the code is not deterministic, since it depends on how many elements
+are checked before a thread is executed on a positive value, which terminates
+the look-up.
+
+Consider method \<Object.hashCode()> of \<java.lang.Object>. It yields an \<int>
+hash of the object. In its current implementation, it computes it from the
+RAM address of the object. Hence, different executions of the same call
+will likely yield different hashes. The same occurs for method \<Object.toString()>,
+that is implemented in terms of \<Object.hashCode()>: in OpenJDK 11, its
+implementation concatenates the class name of the object with its hash:
+%
+\begin{verbatim}
+public String toString() {
+  return getClass().getName() + "@"
+         + Integer.toHexString(hashCode());
+}
+\end{verbatim}
+%
+Banning such calls from smart contracts would, however, be overkill
+and hardly accepted by programmers, that
+heavily call such methods in their programs, without incurring in
+non-determinism. The reason is that programmers very often
+take care of calling such methods only on objects that redefine
+\<hashCode()> or \<toString()>. If that is the case, the call will actually
+execute the redefinition, that might well be deterministic. It seems sensible
+to allow calls to such methods in smart contracts, but only if they occur
+on objects that redefine them in a determinitsic way. Sec.~\ref{sec:proof_obligations}
+shows how this extra condition can be enforced.

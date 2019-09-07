@@ -29,7 +29,7 @@ callers and implement payable methods.
 
 One of the most compelling reasons for writing smart contracts
 in a mainstream language such as Java is that it comes with a large
-library, that provides general solutions for typical programming problems.
+support library, that provides general solutions for typical programming problems.
 Many programmers are familiar with this library and appreciate the possibility
 of using the same also for developing smart contracts. This reduces
 development time and errors, since the library has been widely tested
@@ -41,32 +41,34 @@ cannot be reached.
 Non-determinism is obvious for library classes and methods that support, explicitly,
 parallel processing or random computations. But the main problem is that
 also some library features, that are explicitly sequential, might lead to
-non-deterministic results. That is, different runs of the same code, with the
-same input, might lead to different results, even on the same machine.
+non-deterministic results.
 This is well-known to Java programmers and has been at the origin of subtle
 bugs also in traditional software. In the case of smart contracts, however,
-this situation cannot be tolerated.
+this situation cannot be tolerated, since it makes consensus impossible:
+the execution of the the same code, in the same state,
+might lead to different results in two distinct blockchain nodes.
 
 The contributions of this paper are the discussion of the kind of determinism
 needed for smart contracts; a way for specifying deterministic fragments
 of the Java library; and a technique for
 enforcing some conditions needed for determinism, statically or dynamically.
 We have implemented this technique, that is currently part of the verification
-layer for smart contracts of the [reference removed for blind review] blockchain.
+layer for Java smart contracts of the [reference removed for blind review] blockchain.
 
 This work is organized as follows.
 Sec.~\ref{sec:determinism} discusses the kind of determinism expected for Java smart contracts,
 with specific examples of methods from the Java library.
-Sec.~\ref{sec:white_listing} presents a technique for specifying \emph{white-listed} fragments of the Java library,
-that is, subsets of the library that are allowed in smart contracts.
+Sec.~\ref{sec:white_listing} presents a technique for specifying \emph{white-listed}
+fragments of the Java library,
+that is, deterministic subsets of the library that can be used for writing smart contracts.
 Sec.~\ref{sec:proof_obligations} shows that
 some fragments are deterministic only under specific conditions on the way their methods
 are called.
 Sec.~\ref{sec:enforcing} provides a technique for enforcing such conditions, dynamically
-or statically, based on bytecode instrumentation.
+or statically, through bytecode instrumentation.
 
 This paper is \emph{not} about Java smart contracts themselves. The interested reader
 is referred to the references provided above. Hence, this paper does not tackle
 the specific syntax, methods and technology needed for writing smart contracts in Java.
-Therefore, examples are presented in an abstract way, unrelated to any specific
+Examples are presented in an abstract way, unrelated to any specific
 Java dialect for smart contracts or blockchain.

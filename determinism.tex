@@ -9,39 +9,30 @@ Each version has different implementations, with OpenJDK probably being
 the most used, nowadays. Some classes and methods exist only in some versions of the library.
 For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
 while class \<java.util.Collection> was introduced in version $1.2$.
-In the following, when discussing a specific methods, we assume that a version
-of the Java library is used, where the class and the same method exist.
+In the following, when discussing a specific method, we assume that a version
+of the Java library is used, where the method (and hence its declaring class) exist.
 Moreover, we report fully qualified names of classes only the first time they are cited.
 
-Fig.~\ref{fig:determinism} reports some examples of methods
-from the Java library, classified
-on the basis of the kind of determinism that holds for them.
-We discuss them below. Since Java is an object-oriented language,
-a non-static method can always be called on any object whose class
-is a subtype of that where the method is defined. For instance, method \<Number.intValue()> in
-Fig.~\ref{fig:determinism} can be called on any object that extends
-\<java.lang.Number> and that call, at run time, might
-execute any implementation of \<intValue()> in any subtype of \<Number>
-(such as in \<java.lang.Integer> or in \<java.lang.Double>).
-Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
-deterministic, this means that that is true for every implementation of
-\<intValue()> in the subtypes of \<Number> of the Java library.
-
-Many methods of the Java library are clearly deterministic. Their behavior is fixed
-and does not change with distinct versions of the library. An example is the unwrapping
-method \<intValue()> of \<Number> (Fig.~\ref{fig:determinism}). It yields
-the primitive \<int> value corresponding to any object of the abstract class \<Number>.
-Examples are objects of class \<java.lang.Integer> or \<java.lang.Double>. For instance,
-\[
-\<new Integer(3).intValue() == 3>
-\]
-holds in any version of the Java library, as well as
-\[
-\<new Double(3.14).intValue() == 3>
-\]
-since truncation of \<double> into \<int> is machine-independent in Java.
-Hence, a language for smart contracts, that must require determinism,
-can safely allow the use of that method, always.
+Let us discuss the same meaning of \emph{determinism}. Remember that
+our goal is to guarantee that the code of a given smart contract, executed
+in two different blockchain nodes, yields the same result.
+If we define the state
+of the Java interpreter as a function from variables and object fields into values, then
+determinism means that a method, applied at a given state, can only yield a single result,
+that is, a single pair of subsequent state and return value (if any).
+This definition, however, is too strict. Consider the constructor method
+\<String()> of \<java.lang.String>, that constructs and returns a new empty \<String>
+object. The execution of this method, in two different blockchain nodes,
+will very likely yield distinct references (\emph{i.e.}, pointers in RAM).
+But both references will refer to a brand new empty string.
+As long as the programming language does not allow one to see
+the exact pointer value of a reference, but only the object it refers to,
+then two states can be considered equivalent if and only if there is
+a bidirectional mapping between their references.
+With this interpretation of \emph{determinism}, method \<String()>, applied to two equivalent
+states, yields equivalent states and equivalent return value (a reference to
+a brand new empty string).
+Hence, that constructor method is deterministic.
 
 \begin{figure}[t]
   \begin{center}
@@ -51,9 +42,14 @@ can safely allow the use of that method, always.
       & \multirow{2}{*}{always} & \multirow{2}{*}{platform} & platform + & \multirow{2}{*}{never} \\
       & & & conditions & \\\hline\hline
       \<Number.intValue()> & \checkmark &   &   & \\\hline
+      \<Object()> & \checkmark &   &   & \\\hline
+      \<String()> & \checkmark &   &   & \\\hline
+      \<String(String original)> & \checkmark &   &   & \\\hline
+      \<String.length()> & \checkmark &   &   & \\\hline
       \<Integer.valueOf(int i)> & & \checkmark & & \\\hline
       \<System.currentTimeMillis()> & & & & \checkmark \\\hline
       \<BaseStream$\text{<}$T,S$\text{>}$.parallel()> & & & & \checkmark \\\hline
+      \<Thread.start()> & & & & \checkmark \\\hline
       \<Object.hashCode()> & & & \checkmark & \\\hline
       \<Object.toString()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.iterator()> & & & \checkmark & \\\hline
@@ -79,9 +75,45 @@ condition can be sensibly devised to guarantee that it does not compromise code
 determinism.}\label{fig:determinism}
 \end{figure}
 
-Consider the static method \<Integer.valueOf(int i)> now. It performs the inverse operation of wrapping
-a primitive \<int> value into an object of class \<Integer>. It might be surprising, but its behavior
-can be different in distinct implementations of the Java library. For instance,
+Fig.~\ref{fig:determinism} reports some examples of methods
+from the Java library, classified
+on the basis of the kind of determinism that holds for them.
+We discuss them below. Since Java is an object-oriented language,
+a non-static method can always be called on any object whose class
+is a subtype of that where the method is defined. For instance, method \<Number.intValue()> in
+Fig.~\ref{fig:determinism} can be called on any object that extends
+\<java.lang.Number>. That call, at run time, might
+execute any implementation of \<intValue()> in any subtype of \<Number>
+(such as in \<java.lang.Integer> or in \<java.lang.Double>).
+Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
+deterministic, this means that that is true for every implementation of
+\<intValue()> in the subtypes of \<Number> of the Java library.
+
+\subsubsection*{Always Deterministic Methods.}
+Many methods of the Java library are clearly deterministic. Their behavior is fixed
+and does not change with distinct versions of the library. An example is the unwrapping
+method \<intValue()> of \<Number> (Fig.~\ref{fig:determinism}). It yields
+the primitive \<int> value corresponding to an instance of the abstract class \<Number>, such
+as objects of class \<java.lang.Integer> or \<java.lang.Double>. For instance,
+\[
+\<new Integer(3).intValue() == 3>
+\]
+holds in any version of the Java library, as well as
+\[
+\<new Double(3.14).intValue() == 3>
+\]
+since truncation of \<double> into \<int> is machine-independent in Java.
+Hence, a language for smart contracts, that must require determinism,
+can safely allow the use of that method, always. Other examples of such methods
+are the constructors of \<String> or \<java.lang.Object>
+reported in Fig.~\ref{fig:determinism}, as already discussed above, or method
+\<String.length()>, that yields the length of a string.
+
+\subsubsection*{Platform-Deterministic Methods.}
+The static method \<Integer.valueOf(int i)> performs the inverse operation of wrapping
+a primitive \<int> value into an object of class \<Integer>. It might be surprising,
+but its result can be different in two blockchain nodes, if they
+use distinct implementations of the Java library. For instance,
 \[
 \<Integer.valueOf(3) == Integer.valueOf(3)>
 \]
@@ -91,21 +123,25 @@ used outside that range, so that
 \[
 \<Integer.valueOf(2019) == Integer.valueOf(2019)>
 \]
-might be true in some implementations and false in others, that yield distinct objects for the two calls.
+might be true in some implementations of the Java library
+and false in others, that yield distinct objects for the two calls.
 We call \emph{platform deterministic} such methods, since they are deterministic only once a specific
 implementation (\emph{platform}) of the Java library is fixed. Such methods can be used in smart contracts,
-but the requirement that nodes use a specific version of the Java library must be included
-in the consensus rules.
+but only if all blockchain nodes are forced to
+use a specific version of the Java library, which can be part of the consensus rules.
 
-Consider the static method \<System.currentTimeMillis()> of \<java.lang.System>.
-It yields the number of milliseconds elapsed since the beginning of 1970.
-Not surprisingly, code using that method will get diffrent measures for distinct calls.
-Such inherently non-deterministic methods cannot be accepted in a smart contract.
-Method \<parallel()> of the \<java.util.stream.BaseStream> class, instead,
-yields a parallel version of a stream. Introduced in Java 8, streams are
+\subsubsection*{Never Deterministic Methods.}
+Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
+yields the number of milliseconds elapsed since the beginning of 1970.
+Not surprisingly, code using that method will likely get different measures in different
+blockchain nodes.
+Such an inherently non-deterministic method cannot be used in a smart contract.
+
+Consider method \<parallel()> of \<java.util.stream.BaseStream> now.
+It yields a parallel version of a \emph{stream}. Introduced in Java 8, streams are
 an abstract description of a lazy enumeration algorithm over values.
-They are meant to implement the map/reduce design pattern. Their specification
-makes heavy use of lamba expressions. For instance, consider following code
+They are meant to implement the map/filter/reduce design pattern. Their specification
+makes heavy use of lamba expressions. For instance, consider following code:
 %
 \begin{verbatim}
 List<Integer> list = ...
@@ -117,39 +153,74 @@ int positive = list.stream().parallel()
 \end{verbatim}
 %
 and assume that \<list> contains at least a positive \<Integer>.
-The code above processes \<list> by defining a parallel algorithm
-that unwraps each element into its corresponding \<int> primitive value,
+This code processes \<list> with a parallel algorithm
+that unwraps each \<Integer> element of the list into its corresponding \<int> primitive value,
 filters only the positive values and then selects any of them.
 The result of \<findAny()> is an optional value, hence the
 \<getAsInt()> call is needed at the end. Since the algorithm is
 parallel, each execution of the code might select a different
 positive element, depending on thread scheduling. Hence, \<parallel()>
+introduces non-determinism and
 cannot be allowed in a smart contract. Note that the same gas consumption
 of the code is not deterministic, since it depends on how many elements
 are checked before a thread is executed on a positive value, which terminates
 the look-up.
 
-Consider method \<Object.hashCode()> of \<java.lang.Object>. It yields an \<int>
-hash of the object. In its current implementation, it computes it from the
-RAM address of the object. Hence, different executions of the same call
-will likely yield different hashes. The same occurs for method \<Object.toString()>,
-that is implemented in terms of \<Object.hashCode()>: in OpenJDK 11, its
-implementation concatenates the class name of the object with its hash:
+In general, methods that introduce parallelism are never deterministic.
+Another example is \<Thread.start()> in \<java.lang.Thread>, that spawns
+a parallel execution thread.
+
+\subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
+Consider method \<Object.hashCode()> of \<Object> now. It yields an \<int>
+hash of an object. In its current implementation, it computes it from the
+RAM pointer value of the object reference.
+Since our definition of determinism must abstract away
+the exact value of a reference, it follows that this method is non-deterministic.
+For instance, the following code, in two distinct blockchain nodes,
+will likely assign different values to variable \<i>:
 %
 \begin{verbatim}
-public String toString() {
-  return getClass().getName() + "@"
-         + Integer.toHexString(hashCode());
-}
+int i = new Object().hashCode();
 \end{verbatim}
 %
-Banning such calls from smart contracts would, however, be overkill
-and hardly accepted by programmers, that
-heavily call such methods in their programs, without incurring in
-non-determinism. The reason is that programmers very often
+The same problem occurs for method \<Object.toString()> that, inside
+\<Object>, is implemented in terms of \<Object.hashCode()> (in OpenJDK 11, its
+implementation concatenates
+the name of the run-time class of the object with its hash and returns it).
+Hence, the following code, in two distinct blockchain nodes,
+will likely assign different strings to variable \<s>:
+%
+\begin{verbatim}
+String s = new Object().toString();
+\end{verbatim}
+%
+However, banning calls to \<Object.hashCode()> or \<Object.toString()>
+from smart contracts would be unacceptable to programmers, that
+heavily use them in their programs, without incurring in
+non-determinism. The reason is that programmers normally
 take care of calling such methods only on objects that redefine
-\<hashCode()> or \<toString()>. If that is the case, the call will actually
-execute the redefinition, that might well be deterministic. It seems sensible
+the default (non-deterministic) implementation of
+\<hashCode()> and \<toString()> from class \<Object>.
+If that is the case, the call will actually
+execute the redefinition, that is typically deterministic. Hence, it seems sensible
 to allow calls to such methods in smart contracts, but only if they occur
-on objects that redefine them in a determinitsic way. Sec.~\ref{sec:proof_obligations}
-shows how this extra condition can be enforced.
+on objects that redefine them in a deterministic way, as in the following example:
+%
+\begin{verbatim}
+String o = ... // deterministic computation
+int h = o.hashCode();
+\end{verbatim}
+%
+or even the following:
+%
+\begin{verbatim}
+String s = ... // deterministic computation
+Object o = s;
+int h = o.hashCode();
+\end{verbatim}
+%
+In both cases, variable \<o>, at run time,
+refers to a string and the deterministic redefinition of
+\<hashCode()> inside \<String> will be called.
+Sec.~\ref{sec:proof_obligations} shows how this extra condition on the run-time class of
+\<o> can be enforced.

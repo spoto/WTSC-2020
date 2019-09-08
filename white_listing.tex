@@ -1,1 +1,10 @@
 \section{Specifying White-Listed Fragments of the Java Library}\label{sec:white_listing}
+
+Sec.~\ref{sec:determinism} has shown that some methods of the Java library can be used
+in smart contracts, at least if a specific version of the library is fixed and some
+run-time conditions are enforced. Such methods are called \emph{white-listed}
+(Fig.~\ref{fig:determinism}). A set of white-listed methods must be part of the
+consensus rules: each node verifies that the methods used in smart contracts are
+in the white-listed set and otherwise rejects the installation of the smart contract
+in blockchain. This section provides a compact way of specifying the set of white-listed methods,
+in a form that can be compiled and provided to the blockchain nodes.

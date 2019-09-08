@@ -47,15 +47,15 @@ Hence, that constructor method is deterministic.
       \<String(String original)> & \checkmark &   &   & \\\hline
       \<String.length()> & \checkmark &   &   & \\\hline
       \<Integer.valueOf(int i)> & & \checkmark & & \\\hline
-      \<System.currentTimeMillis()> & & & & \checkmark \\\hline
-      \<BaseStream$\text{<}$T,S$\text{>}$.parallel()> & & & & \checkmark \\\hline
-      \<Thread.start()> & & & & \checkmark \\\hline
       \<Object.hashCode()> & & & \checkmark & \\\hline
       \<Object.toString()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.iterator()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.stream()> & & & \checkmark & \\\hline
       \<Collection$\text{<}$E$\text{>}$.add(E e)> & & & \checkmark & \\\hline
       \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)> & & & \checkmark & \\\hline
+      \<System.currentTimeMillis()> & & & & \checkmark \\\hline
+      \<BaseStream$\text{<}$T,S$\text{>}$.parallel()> & & & & \checkmark \\\hline
+      \<Thread.start()> & & & & \checkmark \\\hline
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{\upbracefill}\\
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{white-listed}\\
     \end{tabular}
@@ -130,6 +130,120 @@ implementation (\emph{platform}) of the Java library is fixed. Such methods can 
 but only if all blockchain nodes are forced to
 use a specific version of the Java library, which can be part of the consensus rules.
 
+\subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
+Consider method \<Object.hashCode()> of \<Object> now. It yields an \<int>
+hash of an object. In its current implementation, it computes the hash from the
+RAM pointer value of the object reference.
+Since two blockchain nodes will likely get different RAM pointers,
+this method is non-deterministic.
+In other terms, this methods exposes an execution detail (the exact RAM pointer)
+that was meant to be abstracted away in our definition of determinism.
+For instance, the following code, in two distinct blockchain nodes,
+and even on different executions on the same node,
+will likely assign different values to variable \<i>:
+%
+\begin{verbatim}
+int i = new Object().hashCode();
+\end{verbatim}
+%
+The same problem occurs for method \<Object.toString()> that, inside
+\<Object>, is implemented in terms of \<Object.hashCode()> (in OpenJDK 11, its
+implementation concatenates
+the name of the run-time class of the object with its hash and returns it).
+Hence, the following code, in two distinct blockchain nodes,
+will likely assign different strings to variable \<s>:
+%
+\begin{verbatim}
+String s = new Object().toString();
+\end{verbatim}
+%
+However, banning calls to \<Object.hashCode()> or \<Object.toString()>
+from smart contracts would be unacceptable to programmers, that
+heavily use such calls in their programs, without incurring in
+non-determinism. The reason is that programmers normally
+take care of calling such methods only on objects that redefine
+the default (non-deterministic) implementation of
+\<hashCode()> and \<toString()> from class \<Object>.
+If that is the case, the call will actually
+execute the redefinition, that is typically deterministic. Hence, it seems sensible
+to allow calls to such methods in smart contracts, but only if they occur
+on objects that redefine them in a deterministic way, as in the following example:
+%
+\begin{verbatim}
+String o = ... // deterministic computation
+int h = o.hashCode();
+\end{verbatim}
+%
+or even the following:
+%
+\begin{verbatim}
+String s = ... // deterministic computation
+Object o = s;
+int h = o.hashCode();
+\end{verbatim}
+%
+In both cases, variable \<o>, at run time,
+refers to a string and the deterministic (but potentially platform-specific)
+redefinition of \<hashCode()> inside \<String> will be called.
+This is why we call such methods \emph{platform-deterministic under certain conditions}:
+they are deterministic if a given Java library is fixed \emph{and} some run-time conditions hold.
+Sec.~\ref{sec:enforcing} shows how this extra condition on the run-time class of
+\<o> can be enforced.
+
+Consider methods \<iterator()> and \<stream()> of the generic class
+\<Collection$\text{<}$E$\text{>}$> now. They provide two different ways for
+processing the elements, of type $E$, of a collection. The former implements
+the traditional \emph{iterator pattern} and yields an object able to enumerate
+the elements. The second yields an abstract description of an algorithm on the
+elements, that can be subsequently programmed and executed. The interesting point, is
+that they do not guarantee any specific enumeration order: the elements can be
+provided in any order, in general. There are, however, some collections for which they
+guarantee an order, such as instances of \<java.util.List$\text{<}$E$\text{>}$>:
+on lists, they are guaranteed to proceed from the first towards the last element of the list;
+or instances of \<java.util.LinkedHashSet$\text{<}$E$\text{>}$>, on which they proceed in
+insertion order.
+For other collections, though, such as for \<java.util.HashSet$\text{<}$E$\text{>}$>, the order
+varies with the version of the library \emph{and} with each execution. The reason is that
+\<HashSet> uses a hashmap to store elements with the same \<hashCode()> inside the same bucket.
+Since the \<hashCode()> method, in general, as shown above, is non-deterministic, it follows
+that the distribution of elements inside the buckets varies from run to run and their enumeration
+as well, being implemented as a lexicographic enumeration of the buckets' elements.
+One could decide to forbid class \<HashSet> and only allow its
+more expensive sibling \<LinkedHashSet>. But that would not be enough, as we will discuss later
+for the \<add()> method. Moreover, programmers like \<HashSet> and would be annoyed if it would be
+forbidden. It is much better to observe that, if the \<hashCode()> of all its elements has been
+redefined in a determinitsic way
+and a specific library version is fixed, then the behavior of \<HashSet> becomes
+deterministic, since the shape of the buckets is the same for every run. This means that one
+can allow \<iterator()> and \<stream()> calls on collections
+in smart contracts if a library version is fixed and if
+it is possible to guarantee that all elements of the collection redefine \<hashCode()>
+in a deterministic way. Sec.~\ref{sec:enforcing} shows how this extra run-time condition
+can be enforced.
+
+Consider method \<add(E e)> of \<Collection$\text{<}$E$\text{>}$> now.
+It adds an element \<e> to the collection. Fixed a given library version,
+its behavior is deterministic on lists: it adds \<e> to the end of the list.
+However, on \<HashSet> and \<LinkedHashSet> it scans the bucket selected
+for the \<e.hashCode()> and checks if an equal element was already in the
+bucket, by calling \<equals()> against each element in the bucket. Hence \<add(E e)>
+on a hashset consumes an amount of gas that depends on the shape of its buckets.
+Again, the solution is to require that all elements of the set and \<e> redefine
+\<hashCode()> in a deterministic way, which must be enforced at run time
+(Sec.~\ref{sec:enforcing}).
+
+Consider the static method
+\<stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)>
+of class \<java.util.stream.StreamSupport>. It
+yields a stream for processing the elements specified by
+the given \<Spliterator>. If the \<Spliterator> is deterministic,
+the resulting stream is deterministic as well,
+on a given library version, but only if it is sequential (\<p> must be false).
+Passing true for \<p> would, instead, yield a parallel stream, that is
+inherently non-deterministic and cannot be allowed in smart contracts.
+Hence, this method can be used but only if a specific library is used and
+if it is enforced that false is passed for \<p> at run time (Sec.~\ref{sec:enforcing}).
+
 \subsubsection*{Never Deterministic Methods.}
 Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
 yields the number of milliseconds elapsed since the beginning of 1970.
@@ -169,58 +283,3 @@ the look-up.
 In general, methods that introduce parallelism are never deterministic.
 Another example is \<Thread.start()> in \<java.lang.Thread>, that spawns
 a parallel execution thread.
-
-\subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
-Consider method \<Object.hashCode()> of \<Object> now. It yields an \<int>
-hash of an object. In its current implementation, it computes it from the
-RAM pointer value of the object reference.
-Since our definition of determinism must abstract away
-the exact value of a reference, it follows that this method is non-deterministic.
-For instance, the following code, in two distinct blockchain nodes,
-will likely assign different values to variable \<i>:
-%
-\begin{verbatim}
-int i = new Object().hashCode();
-\end{verbatim}
-%
-The same problem occurs for method \<Object.toString()> that, inside
-\<Object>, is implemented in terms of \<Object.hashCode()> (in OpenJDK 11, its
-implementation concatenates
-the name of the run-time class of the object with its hash and returns it).
-Hence, the following code, in two distinct blockchain nodes,
-will likely assign different strings to variable \<s>:
-%
-\begin{verbatim}
-String s = new Object().toString();
-\end{verbatim}
-%
-However, banning calls to \<Object.hashCode()> or \<Object.toString()>
-from smart contracts would be unacceptable to programmers, that
-heavily use them in their programs, without incurring in
-non-determinism. The reason is that programmers normally
-take care of calling such methods only on objects that redefine
-the default (non-deterministic) implementation of
-\<hashCode()> and \<toString()> from class \<Object>.
-If that is the case, the call will actually
-execute the redefinition, that is typically deterministic. Hence, it seems sensible
-to allow calls to such methods in smart contracts, but only if they occur
-on objects that redefine them in a deterministic way, as in the following example:
-%
-\begin{verbatim}
-String o = ... // deterministic computation
-int h = o.hashCode();
-\end{verbatim}
-%
-or even the following:
-%
-\begin{verbatim}
-String s = ... // deterministic computation
-Object o = s;
-int h = o.hashCode();
-\end{verbatim}
-%
-In both cases, variable \<o>, at run time,
-refers to a string and the deterministic redefinition of
-\<hashCode()> inside \<String> will be called.
-Sec.~\ref{sec:enforcing} shows how this extra condition on the run-time class of
-\<o> can be enforced.

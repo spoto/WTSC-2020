@@ -8,7 +8,7 @@ $1.0$ edition of 1996 to its $13$ edition expected to ship in September 2019.
 Each version has different implementations, with OpenJDK probably being
 the most used, nowadays. Some classes and methods exist only in some versions of the library.
 For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
-while class \<java.util.Collection> was introduced in version $1.2$.
+while class \<java.util.Collection> was only introduced in version $1.2$.
 In the following, when discussing a specific method, we assume that a version
 of the Java library is used, where the method (and hence its declaring class) exist.
 Moreover, we report fully qualified names of classes only the first time they are cited.
@@ -45,6 +45,7 @@ Hence, that constructor method is deterministic.
       \<Object()> & \checkmark &   &   & \\\hline
       \<String()> & \checkmark &   &   & \\\hline
       \<String(String original)> & \checkmark &   &   & \\\hline
+      \<String.concat(String other)> & \checkmark &   &   & \\\hline
       \<String.length()> & \checkmark &   &   & \\\hline
       \<Integer.valueOf(int i)> & & \checkmark & & \\\hline
       \<Object.hashCode()> & & & \checkmark & \\\hline
@@ -106,8 +107,9 @@ since truncation of \<double> into \<int> is machine-independent in Java.
 Hence, a language for smart contracts, that must require determinism,
 can safely allow the use of that method, always. Other examples of such methods
 are the constructors of \<String> or \<java.lang.Object>
-reported in Fig.~\ref{fig:determinism}, as already discussed above, or method
-\<String.length()>, that yields the length of a string.
+reported in Fig.~\ref{fig:determinism}, as already discussed above, or methods
+\<String.concat(String other)>, that yields the concatenation of \<this> and \<other>,
+and \<String.length()>, that yields the length of a string.
 
 \subsubsection*{Platform-Deterministic Methods.}
 The static method \<Integer.valueOf(int i)> performs the inverse operation of wrapping

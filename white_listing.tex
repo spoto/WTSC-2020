@@ -1,10 +1,75 @@
-\section{Specifying White-Listed Fragments of the Java Library}\label{sec:white_listing}
+\section{White-Listed Fragments of the Java Library}\label{sec:white_listing}
+
+\newcommand{\wl}{\mathit{WL}}
 
 Sec.~\ref{sec:determinism} has shown that some methods of the Java library can be used
 in smart contracts, at least if a specific version of the library is fixed and some
 run-time conditions are enforced. Such methods are called \emph{white-listed}
-(Fig.~\ref{fig:determinism}). A set of white-listed methods must be part of the
+(Fig.~\ref{fig:determinism}).
+
+\begin{definition}\label{def:white-listing}
+  A \emph{white-listed fragment} $\wl$ is a set of method signatures (constructors are considered
+  methods named as their defining class), with associated run-time conditions.
+\end{definition}
+%
+A white-listed fragment must be part of the
 consensus rules: each node verifies that the methods used in smart contracts are
-in the white-listed set and otherwise rejects the installation of the smart contract
-in blockchain. This section provides a compact way of specifying the set of white-listed methods,
-in a form that can be compiled and provided to the blockchain nodes.
+in the fragememt and otherwise reject the installation of the smart contract
+in blockchain.
+%
+\begin{definition}\label{def:obeys}
+  A program $P$ \emph{obeys} a white-listed fragment $\wl$ if and only if
+  \begin{enumerate}
+    \item every method call
+      in $P$ has a static target that is either in $\wl$ or redefines a signature in $\wl$
+      (syntactical check); and
+    \item in every execution of $P$, the run-time conditions in $\wl$ hold (semantical check).
+  \end{enumerate}
+\end{definition}
+%
+Condition 1 above can be check
+in $O(|P|\cdot h\cdot\log_2|\wl|)$ time, where $h$ is the maximal height of the class
+hierarchy. Namely, for the static target of every call in $P$,
+one must follow the class hierarchy upwards, while checking if the method is in $\wl$. If a total
+order is defined on method signatures, this last check can be done through binary search,
+with logarithmic complexity. Sec.~\ref{sec:enforcing} will consider condition 2 later.
+%
+\begin{definition}\label{def:deterministic}
+  Given a Java library version $V$, a white-listed fragment $\wl$ is
+  \emph{deterministic for $V$}
+  if and only if any Java program that obeys $\wl$
+  is deterministic, when executed over $V$.
+\end{definition}
+
+A very simple example of white-listed fragment is
+$\wl_1=\emptyset$. It is deterministic for every Java library version.
+Namely, a program that obeys $\wl_1$ cannot call any library method or constructor
+(condition 1 of Def.~\ref{def:obeys}).
+Since Java classes must, at least, call the constructor of their superclass, it follows
+that no Java program can obey $\wl_1$, that is hence vacuously deterministic.
+
+Another white-listed fragment is $\wl_2=\{\<Object()>\}$. It contains
+just the constructor of class \<Object>. This time, it is possible to write programs $P$
+that obey $\wl_2$, whose classes extend \<Object> and whose constructors call \<Object()>.
+But no other library methods and contructors can be called, which is an irrealistic
+constraint.
+
+A white-listed fragment that allows, at least, simple string manipulations is
+$\wl_3=\{\<Object()>,\<String.concat(String other)>,\<String.length()>\}$. It allows one
+to write Java programs whose classes extend \<Object> and whose code performs computations
+such as \<"hello".concat(s).length()>, where \<s> is a string.
+
+Up to now, we have not used run-time conditions in white-listed fragments.
+In order to specify such conditions, it is possible to use Java annotations on
+method signatures. An annotation can be applied to a formal parameter, meaning that
+the condition must hold for the corresponding actual parameter; or to a non-static method
+itself, meaning that the condition must hold for the receiver of the method.
+Let us introduce for instance the following annotations:
+%
+\begin{description}
+\item[\<@MustRedefineHashCode>:] the value is \<null> or belongs to a class that redefines
+  \<Object.hashCode()>;
+\item[\<@MustRedefineHashCodeOrToString>:] the value is \<null> or belongs to a class that redefines
+  \<Object.hashCode()> or \<Object.toString()> (or both);
+\item[\<@MustBeFalse>:] the value is \<false>.
+\end{description}

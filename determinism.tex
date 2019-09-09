@@ -44,6 +44,7 @@ Hence, that constructor method is deterministic.
       \<Number.intValue()> & \checkmark &   &   & \\\hline
       \<Object()> & \checkmark &   &   & \\\hline
       \<String()> & \checkmark &   &   & \\\hline
+      \<HashSet$\text{<}$E$\text{>}$()> & \checkmark &   &   & \\\hline
       \<String(String original)> & \checkmark &   &   & \\\hline
       \<String.concat(String other)> & \checkmark &   &   & \\\hline
       \<String.length()> & \checkmark &   &   & \\\hline
@@ -106,8 +107,8 @@ holds in any version of the Java library, as well as
 since truncation of \<double> into \<int> is machine-independent in Java.
 Hence, a language for smart contracts, that must require determinism,
 can safely allow the use of that method, always. Other examples of such methods
-are the constructors of \<String> or \<java.lang.Object>
-reported in Fig.~\ref{fig:determinism}, as already discussed above, or methods
+are the constructors of \<String>, \<java.lang.Object> or \<java.util.HashSet>
+reported in Fig.~\ref{fig:determinism}, or methods
 \<String.concat(String other)>, that yields the concatenation of \<this> and \<other>,
 and \<String.length()>, that yields the length of a string.
 

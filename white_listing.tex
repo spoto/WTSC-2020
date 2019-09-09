@@ -14,7 +14,7 @@ run-time conditions are enforced. Such methods are called \emph{white-listed}
 %
 A white-listed fragment must be part of the
 consensus rules: each node verifies that the methods used in smart contracts are
-in the fragememt and otherwise reject the installation of the smart contract
+in the fragmemt and otherwise rejects the installation of the smart contract
 in blockchain.
 %
 \begin{definition}\label{def:obeys}
@@ -26,13 +26,6 @@ in blockchain.
     \item in every execution of $P$, the run-time conditions in $\wl$ hold (semantical check).
   \end{enumerate}
 \end{definition}
-%
-Condition 1 above can be check
-in $O(|P|\cdot h\cdot\log_2|\wl|)$ time, where $h$ is the maximal height of the class
-hierarchy. Namely, for the static target of every call in $P$,
-one must follow the class hierarchy upwards, while checking if the method is in $\wl$. If a total
-order is defined on method signatures, this last check can be done through binary search,
-with logarithmic complexity. Sec.~\ref{sec:enforcing} will consider condition 2 later.
 %
 \begin{definition}\label{def:deterministic}
   Given a Java library version $V$, a white-listed fragment $\wl$ is
@@ -67,9 +60,215 @@ itself, meaning that the condition must hold for the receiver of the method.
 Let us introduce for instance the following annotations:
 %
 \begin{description}
-\item[\<@MustRedefineHashCode>:] the value is \<null> or belongs to a class that redefines
+\item[\<@MustRedefineHashCode>:] the annotated value is \<null> or belongs to a class that redefines
   \<Object.hashCode()>;
-\item[\<@MustRedefineHashCodeOrToString>:] the value is \<null> or belongs to a class that redefines
+\item[\<@MustRedefineHashCodeOrToString>:] the annotated value is \<null> or belongs to a class that redefines
   \<Object.hashCode()> or \<Object.toString()> (or both);
-\item[\<@MustBeFalse>:] the value is \<false>.
+\item[\<@MustBeFalse>:] the annotated value is \<false>.
 \end{description}
+%
+With these annotations, it is possible to define the white-listed fragment:
+%
+\[
+\wl_4=\left\{\begin{array}{c}
+\mbox{\<Object()>},\\
+\mbox{\<@MustRedefineHashCodeOrToString Object.toString()>},\\
+\mbox{\<HashSet$\text{<}$E$\text{>}$()>},\\
+\mbox{\<Collection$\text{<}$E$\text{>}$.add(@MustRedefineHashCode E e)>}
+\end{array}\right\}
+\]
+%
+that constrains \<Object.toString()> to be called on values that redefine
+at least one of \<hashCode()> and \<toString()>, and
+\<Collection$\text{<}$E$\text{>}$.add(E e)> to be called
+with a parameter that redefines \<hashCode()>. $\wl_4$ is deterministic
+for any given Java library version, thanks
+to such constraints. For instance, the following code is deterministic
+on any Java library: it creates a hashset and populates it with a
+\<String>, a \<java.math.BigInteger> and an empty \<HashSet>. All these three
+classes redefine method \<hashCode()> hence the constraint on \<add()> holds.
+At the end the following code calls \<toString()> on the set of three elements.
+The class \<HashSet> of \<set> redefines \<toString()>, hence the constraint
+on \<toString()> holds:
+%
+\begin{verbatim}
+Set<Object> set = new HashSet<>();
+set.add("hello");
+set.add(BigInteger.ONE);
+set.add(new HashSet<String>());
+String s = set.toString();
+\end{verbatim}
+%
+Variable \<s> above, on the library implementation OpenJDK 8, always contains the string
+\<"[[], 1, hello]">. Other versions of the library might compute different strings but,
+once a library version is fixed, always the same string is computed.
+The reason of this determinism is that the shape of the buckets of the hashset is fixed
+since the \<hashCode()> of its elements is redefined in a deterministic way in
+\<String>, \<BigInteger> and \<HashSet>. Moreover, \<toString> on \<HashSet> has been
+redefined in a way that iterates on the elements of the hashset and concatenates
+their \<toString()>. Since the \<hashCode()> of the elements has been redefined,
+this does not use the pointer address of the elements.
+
+The explication above about the determinism of the code follows from
+a manual investigation of the source code of the library. It is not automated. What can
+be automated is, instead, the verification that the code obeys to a given $\wl$.
+Namely, condition 1 of Def.~\ref{def:obeys} can be checked
+in $O(|P|\cdot h\cdot\log_2|\wl|)$ time, where $|P|$ is the size of the program $P$ to check,
+$h$ is the maximal height of the class
+hierarchy and $|\wl|$ is the size of $\wl$.
+Namely, for the static target of every call in $P$, it is enough
+to follow the class hierarchy upwards, while checking if the method is in $\wl$. If a total
+order is defined on method signatures, this last check can be done through binary search,
+with logarithmic complexity. Condition 2 of Def.~\ref{def:obeys} is more tricky and
+Sec.~\ref{sec:enforcing} will consider how it can be enforced.
+
+This section concludes with a technique that can be used to specify a white-listed fragment.
+Since the latter is a set of method and constructor signatures, it is possible to provide it
+as a set of Java abstract classes and interfaces. For each library class \<C> that defines some
+methods to white-list, one writes an abstract class \<whitelisted.C>;
+for each interface \<I>, one write an interface \<whitelisted.I>. That is, one defines
+in package \<whitelisted> some \emph{mirrors} declaring the white-listed methods or
+constructors only, with their annotations, if any.
+The advantage of using such mirrors is that they can be written by copying and pasting
+signatures from the source code of the mirrored classes. Moreover, they can be compiled,
+which helps spotting typos. Finally, a blockchain node can query such classes by reflection,
+which is both simple and efficient, compared for instance with querying textual or XML
+specifications. Of course, a choice of such specifications must be part of the consensus rules.
+
+\begin{figure}[t]
+\begin{verbatim}
+package whitelisted.java.lang;
+
+import annotations.MustRedefineHashCode;
+import annotations.MustRedefineHashCodeOrToString;
+
+public abstract class Object {
+  public Object() {}
+  public abstract boolean equals(java.lang.Object other);
+  public abstract @MustRedefineHashCodeOrToString java.lang.String toString();
+  public abstract @MustRedefineHashCode int hashCode();
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of class \<Object>.}
+\label{fig:white_listed_Object}
+\end{figure}
+
+\begin{figure}[t]
+\begin{verbatim}
+package whitelisted.java.util;
+
+import annotations.MustRedefineHashCode;
+
+public interface Collection<E> {
+  int size();
+  boolean isEmpty();
+  java.lang.Object[] toArray();
+  <T> T[] toArray(T[] a);
+  <T> T[] toArray(java.util.function.IntFunction<T[]> generator);
+  boolean add(@MustRedefineHashCode E e);
+  boolean contains(@MustRedefineHashCode java.lang.Object o);
+  boolean remove(@MustRedefineHashCode java.lang.Object o);
+  boolean containsAll(java.util.Collection<?> c);
+  boolean addAll(java.util.Collection<? extends E> c);
+  boolean removeAll(java.util.Collection<?> c);
+  boolean removeIf(java.util.function.Predicate<? super E> filter);
+  boolean retainAll(java.util.Collection<?> c);
+  void clear();
+  java.util.stream.Stream<E> stream();
+  java.lang.Iterator<E> iterator();
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of interface \<Collection>.}
+\label{fig:white_listed_Collection}
+\end{figure}
+
+\begin{figure}[t]
+\begin{verbatim}
+package whitelisted.java.util;
+
+public interface Set<E> {
+  boolean containsAll(java.util.Collection<?> c);
+  boolean addAll(java.util.Collection<? extends E> c);
+  boolean retainAll(java.util.Collection<?> c);
+  boolean removeAll(java.util.Collection<?> c);
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of interface \<Set>.}
+\label{fig:white_listed_Set}
+\end{figure}
+
+\begin{figure}[t]
+\begin{verbatim}
+package whitelisted.java.util;
+
+import annotations.MustRedefineHashCode;
+
+public interface List<E> {
+  E get(int index);
+  E remove(int index);
+  boolean remove(java.lang.Object o);
+  boolean contains(java.lang.Object o);
+  void sort(java.util.Comparator<? super E> c);
+  E set(int index, @MustRedefineHashCode E element);
+  void add(int index, @MustRedefineHashCode E element);
+  int indexOf(java.lang.Object o);
+  int lastIndexOf(java.lang.Object o);
+  java.util.ListIterator<E> listIterator();
+  java.util.ListIterator<E> listIterator(int index);
+  java.util.List<E> subList(int fromIndex, int toIndex);
+  java.util.Spliterator<E> spliterator();
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of interface \<List>.}
+\label{fig:white_listed_List}
+\end{figure}
+
+\begin{figure}
+\begin{verbatim}
+package whitelisted.java.util;
+
+public class HashSet<E> {
+  public HashSet() {}
+  public HashSet(java.util.Collection<? extends E> c) {}
+  public HashSet(int initialCapacity, float loadFactor) {}
+  public HashSet(int initialCapacity) {}
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of class \<HashSet>.}
+\label{fig:white_listed_HashSet}
+\end{figure}
+
+\begin{figure}
+\begin{verbatim}
+package whitelisted.java.util;
+
+public abstract class ArrayList<E> {
+  public ArrayList() {}
+  public ArrayList(int size) {}
+  public ArrayList(java.util.Collection<? extends E> c) {}
+  public abstract void trimToSize();
+  public abstract void ensureCapacity(int minCapacity);
+}
+\end{verbatim}
+\caption{A specification of the white-listed methods of class \<ArrayList>.}
+\label{fig:white_listed_ArrayList}
+\end{figure}
+
+For instance, Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
+\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
+\ref{fig:white_listed_HashSet} and \ref{fig:white_listed_ArrayList}
+specify a white-listed portion of \<Object>,
+\<Collection>, \<Set>, \<List>, \<HashSet> and \<ArrayList>, respectively.
+This fragment is deterministic for a given fixed version of the Java library.
+Some declarations are worth discussing. Namely, method
+\<contains(Object o)> in \<Collection> requires \<o> to redefine \<hashCode()>,
+or otherwise, for hashsets, the bucket where it is looked for might be different
+for different runs. Interface \<java.util.List> extends \<java.util.Collection> and hence
+the constraint on the parameter \<e> of \<add(E e)> is inherited from there
+(Fig.~\ref{fig:white_listed_collection}): \<e> must redefine \<hashCode()>.
+This might seem too much: lists do not use \<hashCode()> and do not keep elements in buckets
+like hashsets do. However, without that constraints,
+it becomes possible to create lists whose elements do not redefine \<hashCode()>, over which
+\<toString()> is non-deterministic. Instead, method \<contains(Object o)> is redefined
+for \<List> (Fig.~\ref{fig:white_listed_list}), since
+

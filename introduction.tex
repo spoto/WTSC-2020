@@ -58,12 +58,9 @@ layer for Java smart contracts of the [reference removed for blind review] block
 This work is organized as follows.
 Sec.~\ref{sec:determinism} discusses the kind of determinism expected for Java smart contracts,
 with specific examples of methods from the Java library.
-Sec.~\ref{sec:white_listing} presents a technique for specifying \emph{white-listed}
-fragments of the Java library,
-that is, deterministic subsets of the library that can be used for writing smart contracts.
-Sec.~\ref{sec:proof_obligations} shows that
-some fragments are deterministic only under specific conditions on the way their methods
-are called.
+Sec.~\ref{sec:white_listing} presents defines the notion of \emph{deterministic white-listed fragment} of the Java library,
+that is, a deterministic subset of the library that can be used for writing smart contracts. Its definition can use some
+specific conditions on the way its methods are called.
 Sec.~\ref{sec:enforcing} provides a technique for enforcing such conditions, dynamically
 or statically, through bytecode instrumentation.
 

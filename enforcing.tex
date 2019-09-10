@@ -116,8 +116,53 @@ public static void mustBeFalse(boolean value) {
 }
 \end{verbatim}
 
-Obviously, the name of the verification methods (\<verifier\_0>, \<verifier\_1>, \ldots)
+Obviously, the name of the verification methods (\<verifier\_0>, \<verifier\_1> and so on)
 must be chosen in such a way to avoid name clashes with that of methods that might
 have already existed in the smart contract. Moreover, if a call occurs more times
 in the smart contract, it is more efficient to share the same verifier for all
 occurrences, to keep the class file smaller.
+
+We have implemented this technique at bytecode level, by using the BCEL
+library for bytecode manipulation~\cite{bcel}. The cost of instrumentation never exceeds one
+second on our machine.
+
+\subsection{Static vs.\ Dynamic}\label{subsec:static_vs_dynamic}
+
+The instrumentation technique described above adds dynamic checks on run-time values, to see
+if they satisfy the run-time conditions required by a white-listed fragment.
+Hence, the check is performed repeatedly, every time an annotated white-listed method
+is executed. This can incur in a performance penalty. Hence it would be desirable
+to check if a run-time condition holds, definitely, every time a call is executed.
+This can be done with static analysis~\cite{NielsonNH99}, a technique for inferring
+properties of a program, before it is actually run. Since the verification of
+non-trivial run-time
+properties of programs is in general undecidable~\cite{Rice53},
+static analysis provides a definite answer
+only in some cases. Hence, a blockchain node can apply static analysis to discharge
+the proof-obligations due to run-time conditions on white-listed methods. If static
+analysis succeeds with a definite answer, stating that a given condition definitely holds,
+the blockchain node needn't generate any \<verifier> method for that condition. Otherwise, it
+generates the \<verifier> method, as last resort.
+
+Static analysis can be more or less aggressive.
+More aggressive static analyses can discharge more proof-obligations statically,
+which is desirable since the code of the smart contract will check less
+conditions at run-time. However, aggressive analyses are typically more expensive
+(although they are executed only once, when the smart contract is firstly installed in
+blockchain). In practice, a good trade-off should be found between the power of the analysis
+and its cost.
+
+In our implementation, we use static type information to infer, statically, is a condition
+\<@MustRedefineHashCode> or \<@MustRedefineHashCodeOrToString> holds. If the static type
+$\tau$ of a value is a class that redefines \<Object.hashCode()> or \<Object.toString()>,
+the same must hold for the dynamic type $\tau'$ of the value, that can only be an
+instance of $\tau$. Hence the run-time condition must hold, always.
+This follows from the fact that Java and Java bytecode
+are strongly-typed. Otherwise, the \<verifier> method is added for that condition.
+For \<@MustBeFalse>, our implementation looks, intra-procedurally, for
+all producers of the annotated value.
+If these are always the literal \<false>, then the condition
+must hold. If, instead, at least one producer is the literal \<true> or a complex expression,
+then the static analysis gives up and the \<verifier> method is added for that condition.
+Albeit simple, these static analyses discharge more than half of the proof-obligations
+in our test smart contracts.

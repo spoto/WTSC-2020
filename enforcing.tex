@@ -1,1 +1,123 @@
 \section{Enforcing Proof-Obligations}\label{sec:enforcing}
+
+Sec.~\ref{sec:white_listing} shows that a deterministic fragment of the Java library
+can be specified by using run-time conditions on the values of the receiver or
+parameters of a method. A blockchain node must enforce that such conditions hold
+at run time for the smart contracts that it executes. This translates each condition
+into a proof-obligation that must be discharged: if this is not possible, the smart contract
+cannot be executed or, at least, its execution must be aborted. This section shows how
+this is possible. The idea is that the code of the smart contract goes through a
+preliminary instrumentation, only the first time it is installed in blockchain.
+Very likely, ablockchain node receives
+the smart cotract code in Java bytecode format, already compiled.
+However, to make the technique more accessible to the reader, this section presents
+the instrumentation at source-code level: it must be understood that it actually
+works at bytecode-level, in practice.
+
+Assume that a blockchain node verifies that smart contracts obey to the deterministic
+fragment in Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
+\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
+\ref{fig:white_listed_HashSet} and \ref{fig:white_listed_ArrayList}.
+Assume that a user of the blockchain wants to install in blockchain a smart contract whose
+code contains a call \<collection.remove(element)> whose signature is
+\<Collection$\text{<}$E$\text{>}$.remove(Object o)>.
+The blockchain node spots this syntactically.\footnote{The Java bytecode of the
+  smart contract will
+  contain an instruction \<invokeinterface java.util.Collection.remove(Object):boolean>,
+  or a similar one for a subtype of \<Collection>.}
+The blockchain node consults its white-listed fragment (Fig.~\ref{fig:white_listed_Collection})
+and recognizes the call as
+white-listed, but having a run-time constraint \<@MustRedefineHashCode> on \<o>. Hence, it
+adds a brand new method to the code of the smart contract:
+%
+\begin{verbatim}
+private static boolean verifier_0(Collection<E> receiver, Object par_0) {
+  Support.mustRedefineHashCode(par_0);
+  return receiver.remove(par_0);
+}
+\end{verbatim}
+%
+and replaces \<collection.remove(element)> with \<verifier\_0(collection, element)>.
+At run-time, each time that code is executed, method
+\<Support.mustRedefineHashCode(par\_0)> will check that the actual argument
+passed to \<remove(Object o)> actually redefines \<hashCode()>. The node includes a
+\<Support> class for this, that uses Java reflection to that purpose:
+%
+\begin{verbatim}
+class Support {
+  public static void mustRedefineHashCode(Object value) {
+    if (value != null)
+      if (Stream.of(value.getClass().getMethods())
+          .filter(method -> !Modifier.isAbstract(method.getModifiers())
+                         && Modifier.isPublic(method.getModifiers())
+                         && method.getDeclaringClass() != Object.class)
+          .map(Method::getName)
+          .noneMatch("hashCode"::equals)) {
+        // abort the current transaction and undo all its side-effects
+      }
+  }
+}
+\end{verbatim}
+%
+The code above\footnote{This is code in the blockchain node, not in a smart contract:
+  any method can be used here; there is no white-listing notion for it.}
+checks if the value is non-\<null> and has no method
+named \<hashCode>
+(possibly inherited) that is public, non-abstract and not declared in \<Object>.
+If that is the case, then the value does not redefine \<hashCode()> from \<Object>
+and the transaction gets aborted.
+
+For another example, assume that the code of the smart contract
+contains a call \<x.toString()> whose signature is
+\<Object.toString()>.
+Again, the blockchain node spots this syntactically,
+consults its white-listed fragment (Fig.~\ref{fig:white_listed_Object}),
+recognizes the call as
+white-listed, but having a run-time constraint \<@MustRedefineHashCodeOrToString> on
+the receiver of the call, and consequently
+adds a brand new method to the code of the smart contract:
+%
+\begin{verbatim}
+private static verifier_1(Object receiver) {
+  Support.mustRedefineHashCodeOrToString(receiver);
+  return receiver.toString();
+}
+\end{verbatim}
+%
+Then it replaces \<x.toString()> with \<verifier\_1(x)>.
+Method \<Support.mustRedefineHashCodeOrToString(receiver)> is defined
+similarly to the previous example.
+
+Assume that the smart contract contains a static call
+\<StreamSupport.stream(s, p)>, whose signature is
+\<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)>,
+and that the white-listed fragment of the blockchain node allows that signature,
+but has a run-time condition on \<p> that avoids the creation of parallel streams:
+\<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, @MustBeFalse boolean p)>.
+The node adds
+a brand new method to the code of the smart contract:
+%
+\begin{verbatim}
+private static Stream<T> verifier_2
+    (Spliterator<T> par_0, boolean par_1) {
+  Support.mustBeFalse(par_1);
+  return StreamSupport.stream(par_0, par_1);
+}
+\end{verbatim}
+%
+Then it replaces \<StreamSupport.stream(s, p)> with \<verifier\_2(s, p)>.
+Method \<Support.mustBeFalse(value)> is defined in class \<Support> as:
+%
+\begin{verbatim}
+public static void mustBeFalse(boolean value) {
+  if (value) {
+    // abort the current transaction and undo all its side-effects
+  }
+}
+\end{verbatim}
+
+Obviously, the name of the verification methods (\<verifier\_0>, \<verifier\_1>, \ldots)
+must be chosen in such a way to avoid name clashes with that of methods that might
+have already existed in the smart contract. Moreover, if a call occurs more times
+in the smart contract, it is more efficient to share the same verifier for all
+occurrences, to keep the class file smaller.

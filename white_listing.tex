@@ -122,27 +122,22 @@ order is defined on method signatures, this last check can be done through binar
 with logarithmic complexity. Condition 2 of Def.~\ref{def:obeys} is more tricky and
 Sec.~\ref{sec:enforcing} will consider how it can be enforced.
 
-This section concludes with a technique that can be used to specify a white-listed fragment.
-Since the latter is a set of method and constructor signatures, it is possible to provide it
+A white-listed fragment must be specified in a way that a machine can easily read.
+Since it is a set of method and constructor signatures, it is possible to provide it
 as a set of Java abstract classes and interfaces. For each library class \<C> that defines some
 methods to white-list, one writes an abstract class \<whitelisted.C>;
-for each interface \<I>, one write an interface \<whitelisted.I>. That is, one defines
-in package \<whitelisted> some \emph{mirrors} declaring the white-listed methods or
+for each interface \<I>, one write an interface \<whitelisted.I>. That is, one defines,
+in package \<whitelisted>, some \emph{mirrors} declaring the white-listed methods or
 constructors only, with their annotations, if any.
 The advantage of using such mirrors is that they can be written by copying and pasting
 signatures from the source code of the mirrored classes. Moreover, they can be compiled,
 which helps spotting typos. Finally, a blockchain node can query such classes by reflection,
 which is both simple and efficient, compared for instance with querying textual or XML
-specifications. Of course, a choice of such specifications must be part of the consensus rules.
+specifications. Of course, the same mirrored classes must be part of the consensus rules.
 
 \begin{figure}[t]
 \begin{verbatim}
-package whitelisted.java.lang;
-
-import annotations.MustRedefineHashCode;
-import annotations.MustRedefineHashCodeOrToString;
-
-public abstract class Object {
+public abstract class whitelisted.java.lang.Object {
   public Object() {}
   public abstract boolean equals(java.lang.Object other);
   public abstract @MustRedefineHashCodeOrToString java.lang.String toString();
@@ -155,11 +150,7 @@ public abstract class Object {
 
 \begin{figure}[t]
 \begin{verbatim}
-package whitelisted.java.util;
-
-import annotations.MustRedefineHashCode;
-
-public interface Collection<E> {
+public interface whitelisted.java.util.Collection<E> {
   int size();
   boolean isEmpty();
   java.lang.Object[] toArray();
@@ -184,9 +175,7 @@ public interface Collection<E> {
 
 \begin{figure}[t]
 \begin{verbatim}
-package whitelisted.java.util;
-
-public interface Set<E> {
+public interface whitelisted.java.util.Set<E> {
   boolean containsAll(java.util.Collection<?> c);
   boolean addAll(java.util.Collection<? extends E> c);
   boolean retainAll(java.util.Collection<?> c);
@@ -199,11 +188,7 @@ public interface Set<E> {
 
 \begin{figure}[t]
 \begin{verbatim}
-package whitelisted.java.util;
-
-import annotations.MustRedefineHashCode;
-
-public interface List<E> {
+public interface whitelisted.java.util.List<E> {
   E get(int index);
   E remove(int index);
   boolean remove(java.lang.Object o);
@@ -225,9 +210,7 @@ public interface List<E> {
 
 \begin{figure}
 \begin{verbatim}
-package whitelisted.java.util;
-
-public class HashSet<E> {
+public class whitelisted.java.util.HashSet<E> {
   public HashSet() {}
   public HashSet(java.util.Collection<? extends E> c) {}
   public HashSet(int initialCapacity, float loadFactor) {}
@@ -240,9 +223,7 @@ public class HashSet<E> {
 
 \begin{figure}
 \begin{verbatim}
-package whitelisted.java.util;
-
-public abstract class ArrayList<E> {
+public abstract class whitelisted.java.util.ArrayList<E> {
   public ArrayList() {}
   public ArrayList(int size) {}
   public ArrayList(java.util.Collection<? extends E> c) {}
@@ -258,17 +239,48 @@ For instance, Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collect
 \ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
 \ref{fig:white_listed_HashSet} and \ref{fig:white_listed_ArrayList}
 specify a white-listed portion of \<Object>,
-\<Collection>, \<Set>, \<List>, \<HashSet> and \<ArrayList>, respectively.
+\<Collection>, \<Set>, \<List>, \<HashSet> and \<ArrayList>,
+respectively.\footnote{Method and constructor signatures are copy and paste from the
+Java library source code. For the use of generics, wildcards and
+\<Object> in these signatures, we refer to~\cite{NaftalinW06}.}
 This fragment is deterministic for a given fixed version of the Java library.
-Some declarations are worth discussing. Namely, method
-\<contains(Object o)> in \<Collection> requires \<o> to redefine \<hashCode()>,
-or otherwise, for hashsets, the bucket where it is looked for might be different
-for different runs. Interface \<java.util.List> extends \<java.util.Collection> and hence
-the constraint on the parameter \<e> of \<add(E e)> is inherited from there
-(Fig.~\ref{fig:white_listed_collection}): \<e> must redefine \<hashCode()>.
-This might seem too much: lists do not use \<hashCode()> and do not keep elements in buckets
-like hashsets do. However, without that constraints,
-it becomes possible to create lists whose elements do not redefine \<hashCode()>, over which
-\<toString()> is non-deterministic. Instead, method \<contains(Object o)> is redefined
-for \<List> (Fig.~\ref{fig:white_listed_list}), since
+Thanks to its annotations, this fragment guarantees that elements in collections
+(hence also in sets or lists) redefine \<hashCode()>, which makes iterators
+on collections, streams derived from collections and \<toString()> on collections
+deterministic. The latter can be called on collections since they redefine it,
+hence satisfying the constraint in Fig.~\ref{fig:white_listed_Object}.
+Method \<contains(Object o)> in \<Collection> (Fig.~\ref{fig:white_listed_Collection})
+requires \<o> to redefine \<hashCode()>,
+or otherwise, for hashsets, the bucket where \<o> is looked for might be different
+for different runs, with subsequent non-deterministic behavior.
+That constraint has been lifted for \<contains(Object o)> in \<List>
+(Fig.~\ref{fig:white_listed_List}), since its implementation, for lists,
+scans the list from its head,
+looking for an \<equals()> element, with deterministic behavior,
+regardless of \<o> having redefined \<hashCode()>. This is an application
+of the Liskov substitution principle~\cite{LiskovW94}:
+white-listing constraints can be weakened in subclasses,
+but not strengthened. The same applies to method \<remove(Object o)>, passing from
+\<Collection> to \<List>.
 
+It is interesting to observe that there is not a single largest deterministic fragment
+for a given set of classes and interfaces. For instance, 
+there is another deterministic fragment for the same classes considered in
+Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
+\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
+\ref{fig:white_listed_HashSet} and \ref{fig:white_listed_ArrayList}, identical
+to those figures but allowing any elements in lists, possibly not redefining
+their \<hashCode()> (hence more permissive);
+forbidding \<Object.toString()> and \<Object.hashCode()> (Fig.~\ref{fig:white_listed_Object}),
+that would be non-deterministic on lists now (hence
+more restrictive); and forbidding the conversion constructor
+\<HashSet(Collection$\text{<}$? extends E$\text{>}$ c)>
+(Fig.~\ref{fig:white_listed_HashSet}), that would otherwise allow a hashset to be
+built from a list and hence contain elements whose \<hashCode()> has not been redefined,
+with consequent non-determinism (hence more restrictive). The choice between alternative
+deterministic fragments for a given set of classes is more a question of personal taste.
+One should choose the one that allows more methods of frequent use. In this example,
+forbidding \<Object.toString()> and \<Object.hashCode()> would hardly be acceptable in practice.
+In principle, blockchain nodes could know about more deterministic fragments and check
+if a smart contract obeys at least one of them, hence allowing more code, in general.
+In practice, the extra cost of using more fragments might not justify the effort.

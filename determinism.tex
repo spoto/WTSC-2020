@@ -59,7 +59,7 @@ Hence, that constructor method is deterministic.
       \<BaseStream$\text{<}$T,S$\text{>}$.parallel()> & & & & \checkmark \\\hline
       \<Thread.start()> & & & & \checkmark \\\hline
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{\upbracefill}\\
-      \multicolumn{1}{c}{} & \multicolumn{3}{c}{white-listed}\\
+      \multicolumn{1}{c}{} & \multicolumn{3}{c}{potentially white-listed}\\
     \end{tabular}
   \end{center}
   \caption{Some methods of the Java library, with their behavior \emph{wrt.} code determinism.
@@ -83,10 +83,19 @@ on the basis of the kind of determinism that holds for them.
 We discuss them below. Since Java is an object-oriented language,
 a non-static method can always be called on any object whose class
 is a subtype of that where the method is defined. For instance, method \<Number.intValue()> in
-Fig.~\ref{fig:determinism} can be called on any object that extends
-\<java.lang.Number>. That call, at run time, might
+Fig.~\ref{fig:determinism} can be called on any object \<o> that extends
+\<java.lang.Number>, as in \<o.intValue()>. That call, at run time, might
 execute any implementation of \<intValue()> in any subtype of \<Number>
-(such as in \<java.lang.Integer> or in \<java.lang.Double>).
+(such as in \<java.lang.Integer> or in \<java.lang.Double>), depending on the run-time
+type of the value in \<o>. That value, that determines the implementation of the call, is called
+\emph{receiver} of the call.
+The implementation is selected by starting from the run-time type of the receiver
+and looking-up for the implementation along the superclass
+chain.\footnote{Java also allows the so-called \emph{special} calls, such as
+   \<super.m()>, that start the look-up from a given \emph{static}
+type, as well as calls embedded in closures, such as method references
+(corresponding to \<invokedynamic> in Java bytecode). For simplicity,
+these calls are not discussed here, but our implementation deals with them.}
 Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
 deterministic, this applies to every implementation of
 \<intValue()> in the subtypes of \<Number> of the Java library.

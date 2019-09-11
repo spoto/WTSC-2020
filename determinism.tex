@@ -1,7 +1,7 @@
 \section{Determinism for Java Methods in Smart Contracts}\label{sec:determinism}
 
 This section discusses the different kinds of determinism of methods from
-the Java library and what must be required if such methods are used
+the Java library and what must be required if they are used
 in a language for smart contracts.
 We recall that the Java library exists in different versions, from its first
 $1.0$ edition of 1996 to its $13$ edition expected to ship in September 2019.
@@ -10,29 +10,31 @@ the most used, nowadays. Some classes and methods exist only in some versions of
 For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
 while class \<java.util.Collection> was only introduced in version $1.2$.
 In the following, when discussing a specific method, we assume that a version
-of the Java library is used, where the method (and hence its declaring class) exist.
-Moreover, we report fully qualified names of classes only the first time they are cited.
+of the Java library is used, where the method (and hence its declaring class) exists.
+We report fully qualified names of classes only the first time they are cited.
 
-Let us discuss the same meaning of \emph{determinism}. Remember that
-our goal is to guarantee that the code of a given smart contract, executed
-in two different blockchain nodes, yields the same result.
-If we define the state
-of the Java interpreter as a function from variables and object fields into values, then
-determinism means that a method, applied at a given state, can only yield a single result,
-that is, a single pair of subsequent state and return value (if any).
+Let us discuss the same meaning of \emph{determinism}.
+The \emph{state} of the Java interpreter is typically defined
+as a function from variables and object fields into values.
+Then the goal is to guarantee that the code of a given smart contract, executed
+from the same state but in two different blockchain nodes, yields the same result, \emph{i.e.},
+same next state and same return value (if any).
 This definition, however, is too strict. Consider the constructor method
-\<String()> of \<java.lang.String>, that constructs and returns a new empty \<String>
-object. The execution of this method, in two different blockchain nodes,
-will very likely yield distinct references (\emph{i.e.}, pointers in RAM).
+\<String()> of \<java.lang.String>, that instantiates and returns a new empty \<String>
+object. Its execution, from any given state but in two different blockchain nodes,
+will very likely yield two distinct next states and two
+distinct return values (two pointers in RAM): the heap allocation will likely
+select two distinct free locations for the new object.
 But both references will refer to a brand new empty string.
 As long as the programming language does not allow one to see
 the exact pointer value of a reference, but only the object it refers to,
-then two states can be considered equivalent if and only if there is
-a bidirectional mapping between their references.
-With this interpretation of \emph{determinism}, method \<String()>, applied to two equivalent
-states, yields equivalent states and equivalent return value (a reference to
-a brand new empty string).
-Hence, that constructor method is deterministic.
+then such two next states and references can be considered equivalent.
+This notion of state and reference equivalence is not new, but actually borrowed
+from~\cite{BanerjeeN05,BarthePR13}.
+With this interpretation in mind, method \<String()>, applied to two equivalent
+states but in two distinct blockchain nodes,
+yields equivalent states and equivalent return values (two references to
+brand new empty strings), and is consequently deterministic.
 
 \begin{figure}[t]
   \begin{center}
@@ -62,19 +64,18 @@ Hence, that constructor method is deterministic.
       \multicolumn{1}{c}{} & \multicolumn{3}{c}{potentially white-listed}\\
     \end{tabular}
   \end{center}
-  \caption{Some methods of the Java library, with their behavior \emph{wrt.} code determinism.
+  \caption{Some methods of the Java library, with their behavior \emph{wrt.} determinism.
 \emph{Always} means that a method does not compromise code determinism.
 \emph{Platform} means that
-a method does not compromise determinism, but only once a specific implementation
+a method does not compromise determinism, but only if a specific implementation
 of the library is fixed. \emph{Platform + conditions} means that a method
 does not compromise determinism, but only if an implementation of the library is fixed
 \emph{and} the program satisfies extra conditions, that typically refer to
-the actual arguments passed to the method at run time or to if and how
-other methods are called. \emph{Never} means
+the actual arguments passed to that method or to other methods at run time.
+\emph{Never} means
 that a method can have different behaviors in distinct executions,
-even after fixing the library implementation of the actual arguments, and no
-condition can be sensibly devised to guarantee that it does not compromise code
-determinism.}\label{fig:determinism}
+even on a specific library implementation, and no
+condition can be sensibly devised to make its behavior deterministic.}\label{fig:determinism}
 \end{figure}
 
 Fig.~\ref{fig:determinism} reports some examples of methods
@@ -86,16 +87,15 @@ is a subtype of that where the method is defined. For instance, method \<Number.
 Fig.~\ref{fig:determinism} can be called on any object \<o> that extends
 \<java.lang.Number>, as in \<o.intValue()>. That call, at run time, might
 execute any implementation of \<intValue()> in any subtype of \<Number>
-(such as in \<java.lang.Integer> or in \<java.lang.Double>), depending on the run-time
-type of the value in \<o>. That value, that determines the implementation of the call, is called
-\emph{receiver} of the call.
+(such as in \<Integer> or in \<java.lang.Double>), depending on the run-time
+type of the value in \<o>, named \emph{receiver} of the call.
 The implementation is selected by starting from the run-time type of the receiver
-and looking-up for the implementation along the superclass
-chain.\footnote{Java also allows the so-called \emph{special} calls, such as
-   \<super.m()>, that start the look-up from a given \emph{static}
-type, as well as calls embedded in closures, such as method references
-(corresponding to \<invokedynamic> in Java bytecode). For simplicity,
-these calls are not discussed here, but our implementation deals with them.}
+and looking up for an implementation, along the superclass
+chain.\footnote{Java also allows so-called \emph{special} calls, such as
+   \<super.m()>, that start the implementation look-up from a given \emph{static}
+   type; as well as calls embedded in closures, such as method references
+   (corresponding to \<invokedynamic> in Java bytecode). For simplicity,
+   these calls are not discussed here, but our implementation deals with them.}
 Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
 deterministic, this applies to every implementation of
 \<intValue()> in the subtypes of \<Number> of the Java library.
@@ -105,7 +105,7 @@ Many methods of the Java library are clearly deterministic. Their behavior is fi
 and does not change with distinct versions of the library. An example is the unwrapping
 method \<intValue()> of \<Number> (Fig.~\ref{fig:determinism}). It yields
 the primitive \<int> value corresponding to an instance of the abstract class \<Number>, such
-as objects of class \<java.lang.Integer> or \<java.lang.Double>. For instance,
+as objects of class \<Integer> or \<Double>. For instance,
 \[
 \<new Integer(3).intValue() == 3>
 \]
@@ -113,25 +113,25 @@ holds in any version of the Java library, as well as
 \[
 \<new Double(3.14).intValue() == 3>
 \]
-since truncation of \<double> into \<int> is machine-independent in Java.
+since, in Java, truncation of \<double> into \<int> is machine-independent.
 Hence, a language for smart contracts, that must require determinism,
-can safely allow the use of that method, always. Other examples of such methods
+can safely allow the use of that method, always. Other examples
 are the constructors of \<String>, \<java.lang.Object> or \<java.util.HashSet>
 reported in Fig.~\ref{fig:determinism}, or methods
-\<String.concat(String other)>, that yields the concatenation of \<this> and \<other>,
+\<String.concat(String other)>, that yields the concatenation of strings \<this> and \<other>,
 and \<String.length()>, that yields the length of a string.
 
 \subsubsection*{Platform-Deterministic Methods.}
-The static method \<Integer.valueOf(int i)> performs the inverse operation of wrapping
+The static method \<Integer.valueOf(int i)> wraps
 a primitive \<int> value into an object of class \<Integer>. It might be surprising,
 but its result can be different in two blockchain nodes, if they
-use distinct implementations of the Java library. For instance,
+use distinct implementations of the Java library. For instance, while
 \[
 \<Integer.valueOf(3) == Integer.valueOf(3)>
 \]
-holds, in every implementation of the library, since the official documentation requires this method
-to cache values between $-128$ and $127$, inclusive. But there is no guarantee that caching is
-used outside that range, so that
+holds in every implementation of the library, since the official documentation requires this method
+to cache values between $-128$ and $127$, inclusive, there is instead no guarantee that caching is
+used outside that range, hence
 \[
 \<Integer.valueOf(2019) == Integer.valueOf(2019)>
 \]
@@ -143,15 +143,15 @@ but only if all blockchain nodes are forced to
 use a specific version of the Java library, which can be part of the consensus rules.
 
 \subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
-Consider method \<Object.hashCode()> of \<Object> now. It yields an \<int>
-hash of an object. In its current implementation, it computes the hash from the
+Consider method \<Object.hashCode()> of class \<Object> now. It yields an \<int>
+hash of its receiver. In its current implementations, it computes that hash from the
 RAM pointer value of the object reference.
-Since two blockchain nodes will likely get different RAM pointers,
+Since two blockchain nodes will likely use different RAM pointers,
 this method is non-deterministic.
-In other terms, this methods exposes an execution detail (the exact RAM pointer)
-that was meant to be abstracted away in our definition of determinism.
-For instance, the following code, in two distinct blockchain nodes,
-and even on different executions on the same node,
+In other terms, this method exposes an execution detail (the exact RAM pointer)
+that was meant to be invisible in our definition of determinism.
+For instance, the following code, in two distinct blockchain nodes
+(and even for different executions on the same node),
 will likely assign different values to variable \<i>:
 %
 \begin{verbatim}
@@ -159,9 +159,9 @@ int i = new Object().hashCode();
 \end{verbatim}
 %
 The same problem occurs for method \<Object.toString()> that, inside
-\<Object>, is implemented in terms of \<Object.hashCode()> (in OpenJDK 11, its
+\<Object>, is implemented in terms of \<Object.hashCode()> (its
 implementation concatenates
-the name of the run-time class of the object with its hash and returns it).
+the name of the run-time class of its receiver with its hash and returns it).
 Hence, the following code, in two distinct blockchain nodes,
 will likely assign different strings to variable \<s>:
 %
@@ -175,70 +175,73 @@ heavily use such calls in their programs, without incurring in
 non-determinism. The reason is that programmers normally
 take care of calling such methods only on objects that redefine
 the default (non-deterministic) implementation of
-\<hashCode()> and \<toString()> from class \<Object>.
-If that is the case, the call will actually
-execute the redefinition, that is typically deterministic. Hence, it seems sensible
-to allow calls to such methods in smart contracts, but only if they occur
-on objects that redefine them in a deterministic way, as in the following example:
+\<hashCode()> and \<toString()> in class \<Object>.
+If that is the case, the calls will actually
+execute the redefinitions, that are typically deterministic. Hence, it seems sensible
+to allow calls to such methods in smart contracts, but only if their receiver
+redefines them in a deterministic way, as in the following example:
 %
 \begin{verbatim}
 String o = ... // deterministic computation
-int h = o.hashCode();
+int h = o.hashCode(); // o holds a String, that redefines hashCode()
 \end{verbatim}
 %
-or even the following:
+or even in the following:
 %
 \begin{verbatim}
 String s = ... // deterministic computation
 Object o = s;
-int h = o.hashCode();
+int h = o.hashCode(); // o holds a String, that redefines hashCode()
 \end{verbatim}
 %
 In both cases, variable \<o>, at run time,
-refers to a string and the deterministic (but potentially platform-specific)
+holds a string and the deterministic (but potentially platform-specific)
 redefinition of \<hashCode()> inside \<String> will be called.
-This is why we call such methods \emph{platform-deterministic under certain conditions}:
+Hence, such methods are \emph{platform-deterministic under certain conditions}:
 they are deterministic if a given Java library is fixed \emph{and} some run-time conditions hold.
-Sec.~\ref{sec:enforcing} shows how this extra condition on the run-time class of
-\<o> can be enforced.
+Sec.~\ref{sec:enforcing} shows how such conditions can be enforced.
 
 Consider methods \<iterator()> and \<stream()> of the generic class
 \<Collection$\text{<}$E$\text{>}$> now. They provide two different ways for
 processing the elements, of type $E$, of a collection. The former implements
 the traditional \emph{iterator pattern} and yields an object able to enumerate
-the elements. The second yields an abstract description of an algorithm on the
-elements, that can be subsequently programmed and executed. The interesting point, is
-that they do not guarantee any specific enumeration order: the elements can be
-provided in any order, in general. There are, however, some collections for which they
+the elements. The second yields a \emph{stream}, that is,
+an abstract description of a lazy algorithm on the
+elements, that can be subsequently programmed and executed.
+Streams implement the map/filter/reduce design pattern. Their specification
+makes heavy use of lamba expressions.
+The interesting point is that neither method
+guarantees any specific enumeration order: the elements will be
+enumerated in any order, in general. There are well collections for which they
 guarantee an order, such as instances of \<java.util.List$\text{<}$E$\text{>}$>:
-on lists, they are guaranteed to proceed from the first towards the last element of the list;
+on lists, enumeration proceeds from head to tail;
 or instances of \<java.util.LinkedHashSet$\text{<}$E$\text{>}$>, on which they proceed in
 insertion order.
-For other collections, though, such as for \<java.util.HashSet$\text{<}$E$\text{>}$>, the order
-varies with the version of the library \emph{and} with each execution. The reason is that
-\<HashSet> uses a hashmap to store elements with the same \<hashCode()> inside the same bucket.
-Since the \<hashCode()> method, in general, as shown above, is non-deterministic, it follows
-that the distribution of elements inside the buckets varies from run to run and their enumeration
-as well, being implemented as a lexicographic enumeration of the buckets' elements.
-One could decide to forbid class \<HashSet> and only allow its
-more expensive sibling \<LinkedHashSet>. But that would not be enough, as we will discuss later
-for the \<add()> method. Moreover, programmers like \<HashSet> and would be annoyed if it would be
+For collections such as \<java.util.HashSet$\text{<}$E$\text{>}$>, instead, the order
+varies with the library version \emph{and} with each execution. The reason is that
+\<HashSet> uses a hashmap~\cite{CormenLRS09}
+to store elements with the same \<hashCode()> inside the same bucket.
+Since \<hashCode()>, as shown above, is in general non-deterministic, then
+the distribution of elements inside the buckets varies from run to run and their enumeration
+as well, being implemented as a lexicographic scan of the buckets' elements.
+One could forbid \<HashSet> and only allow its
+more expensive sibling \<LinkedHashSet>, whose iteration order is fixed.
+But that would not solve the non-determinism of its \<add()> method, whose gas consumption
+is affected by the shape of the buckets, as discussed later.
+Moreover, programmers like \<HashSet> and would be annoyed if it would be
 forbidden. It is much better to observe that, if the \<hashCode()> of all its elements has been
 redefined in a determinitsic way
-and a specific library version is fixed, then the behavior of \<HashSet> becomes
+and if a specific library version is fixed, then the behavior of \<HashSet> becomes
 deterministic, since the shape of the buckets is the same for every run. This means that one
-can allow \<iterator()> and \<stream()> calls on collections
-in smart contracts if a library version is fixed and if
-it is possible to guarantee that all elements of the collection redefine \<hashCode()>
-in a deterministic way. Sec.~\ref{sec:enforcing} shows how this extra run-time condition
-can be enforced.
+can allow, in smart contracts, calls to \<iterator()> and \<stream()> on any collection,
+but only under such conditions. Sec.~\ref{sec:enforcing} shows how they can be enforced.
 
-Consider method \<add(E e)> of \<Collection$\text{<}$E$\text{>}$> now.
-It adds an element \<e> to the collection. Fixed a given library version,
-its behavior is deterministic on lists: it adds \<e> to the end of the list.
+Consider method \<add(E e)> of \<Collection$\text{<}$E$\text{>}$>.
+It adds an element \<e> to the collection. For a given library version,
+it is deterministic on lists: it adds \<e> to the end of the list.
 However, on \<HashSet> and \<LinkedHashSet> it scans the bucket selected
-for the \<e.hashCode()> and checks if an equal element was already in the
-bucket, by calling \<equals()> against each element in the bucket. Hence \<add(E e)>
+for \<e.hashCode()> and checks if an equal element was already in that
+bucket, by calling \<equals()> against each of its elements. Hence \<add(E e)>
 on a hashset consumes an amount of gas that depends on the shape of its buckets.
 Again, the solution is to require that all elements of the set and \<e> redefine
 \<hashCode()> in a deterministic way, which must be enforced at run time
@@ -250,24 +253,21 @@ of class \<java.util.stream.StreamSupport>. It
 yields a stream for processing the elements specified by
 the given \<Spliterator>. If the \<Spliterator> is deterministic,
 the resulting stream is deterministic as well,
-on a given library version, but only if it is sequential (\<p> must be false).
-Passing true for \<p> would, instead, yield a parallel stream, that is
+on a given library version, but only if it is sequential.
+Passing true for \<p> would yield a parallel stream instead, that is
 inherently non-deterministic and cannot be allowed in smart contracts.
 Hence, this method can be used but only if a specific library is used and
 if it is enforced that false is passed for \<p> at run time (Sec.~\ref{sec:enforcing}).
 
 \subsubsection*{Never Deterministic Methods.}
-Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
+The static method \<System.currentTimeMillis()>, in \<java.lang.System>,
 yields the number of milliseconds elapsed since the beginning of 1970.
 Not surprisingly, code using that method will likely get different measures in different
 blockchain nodes.
 Such an inherently non-deterministic method cannot be used in a smart contract.
 
 Consider method \<parallel()> of \<java.util.stream.BaseStream> now.
-It yields a parallel version of a \emph{stream}. Introduced in Java 8, streams are
-an abstract description of a lazy enumeration algorithm over values.
-They are meant to implement the map/filter/reduce design pattern. Their specification
-makes heavy use of lamba expressions. For instance, consider following code:
+It yields a parallel version of a stream. For instance, consider the following code:
 %
 \begin{verbatim}
 List<Integer> list = ...
@@ -278,18 +278,18 @@ int positive = list.stream().parallel()
   .getAsInt();
 \end{verbatim}
 %
-and assume that \<list> contains at least a positive \<Integer>.
+and assume that \<list> contains at least two distinct positive \<Integer>s.
 This code processes \<list> with a parallel algorithm
 that unwraps each \<Integer> element of the list into its corresponding \<int> primitive value,
-filters only the positive values and then selects any of them.
+filters only the positive values and selects any of them.
 The result of \<findAny()> is an optional value, hence the
-\<getAsInt()> call is needed at the end. Since the algorithm is
-parallel, each execution of the code might select a different
+\<getAsInt()> call at the end. Since the algorithm is
+parallel, each execution of this code might select a different
 positive element, depending on thread scheduling. Hence, \<parallel()>
 introduces non-determinism and
-cannot be allowed in a smart contract. Note that the same gas consumption
+cannot be allowed in smart contracts. Note that even the gas consumption
 of the code is not deterministic, since it depends on how many elements
-are checked before a thread is executed on a positive value, which terminates
+are checked before a thread encounters a positive value and terminates
 the look-up.
 
 In general, methods that introduce parallelism are never deterministic.

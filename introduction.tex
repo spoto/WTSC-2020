@@ -48,7 +48,7 @@ bugs also in traditional software. For smart contracts, however,
 this situation cannot be tolerated: the execution of the same code, from the same state,
 \emph{must} lead to the same result in any two distinct blockchain nodes.
 
-The contributions of this paper are a discussion of the kind of (non-)determinism
+The contributions of this paper are a discussion of the (non-)determinism
 of the Java library methods; a way for specifying deterministic fragments
 of that library; and a technique for
 enforcing some run-time conditions needed for determinism, statically or dynamically.
@@ -56,8 +56,8 @@ We have implemented this technique, that is currently part of the verification
 layer for Java smart contracts of the [reference removed for blind review] blockchain.
 
 This work is organized as follows.
-Sec.~\ref{sec:determinism} discusses the kind of (non-)determinism featured by some
-examples of methods from the Java library.
+Sec.~\ref{sec:determinism} discusses the (non-)determinism featured by some
+examples of Java library methods.
 Sec.~\ref{sec:white_listing} defines the notion of \emph{deterministic white-listed fragment} of the Java library,
 that is, a deterministic subset of the library that can be used for writing smart contracts.
 Its definition can use run-time conditions on the way its methods are called.

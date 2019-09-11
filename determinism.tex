@@ -81,21 +81,23 @@ condition can be sensibly devised to make its behavior deterministic.}\label{fig
 Fig.~\ref{fig:determinism} reports some examples of methods
 from the Java library, classified
 on the basis of the kind of determinism that holds for them.
-We discuss them below. Since Java is an object-oriented language,
-a non-static method can always be called on any object whose class
-is a subtype of that where the method is defined. For instance, method \<Number.intValue()> in
-Fig.~\ref{fig:determinism} can be called on any object \<o> that extends
-\<java.lang.Number>, as in \<o.intValue()>. That call, at run time, might
-execute any implementation of \<intValue()> in any subtype of \<Number>
-(such as in \<Integer> or in \<java.lang.Double>), depending on the run-time
-type of the value in \<o>, named \emph{receiver} of the call.
-The implementation is selected by starting from the run-time type of the receiver
-and looking up for an implementation, along the superclass
-chain.\footnote{Java also allows so-called \emph{special} calls, such as
+We discuss them below. We recall that, in Java, a method call
+\<o.m(pars)> specifies its \emph{receiver} \<o> and
+its \emph{static target} \<C.m(types)>, that is, a method signature.
+Since Java is an object-oriented language,
+a non-static method call runs the implementation of \<C.m(types)>
+that is selected by looking up \<m(types)> from the run-time class of \<o> upwards,
+along the superclass chain.\footnote{Java also allows so-called \emph{special} calls, such as
    \<super.m()>, that start the implementation look-up from a given \emph{static}
    type; as well as calls embedded in closures, such as method references
    (corresponding to \<invokedynamic> in Java bytecode). For simplicity,
    these calls are not discussed here, but our implementation deals with them.}
+Hence, any implementation of \<m(types)> in \<C> or in any of its
+subtypes can be run. For instance, a call \<o.intValue()> with static target \<Number.intValue()>
+can be called on any object \<o> that extends
+\<java.lang.Number>. At run time, it might
+execute any implementation of \<intValue()> in any subtype of \<Number>,
+such as in \<Integer> or in \<java.lang.Double>, depending on the run-time type of \<o>.
 Hence, when Fig.~\ref{fig:determinism} classifies \<Number.intValue()> as always
 deterministic, this applies to every implementation of
 \<intValue()> in the subtypes of \<Number> of the Java library.

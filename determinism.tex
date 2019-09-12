@@ -11,7 +11,7 @@ For instance, class \<java.lang.Integer> exists from the very first $1.0$ editio
 while class \<java.util.Collection> was only introduced in version $1.2$.
 In the following, when discussing a specific method, we assume that a version
 of the Java library is used, where the method (and hence its declaring class) exists.
-We report fully qualified names of classes only the first time they are cited.
+We report fully-qualified names of classes only the first time they are cited.
 
 Let us discuss the same meaning of \emph{determinism}.
 The \emph{state} of the Java interpreter is typically defined
@@ -22,8 +22,8 @@ same next state and same return value (if any).
 This definition, however, is too strict. Consider the constructor method
 \<String()> of \<java.lang.String>, that instantiates and returns a new empty \<String>
 object. Its execution, from any given state but in two different blockchain nodes,
-will very likely yield two distinct next states and two
-distinct return values (two pointers in RAM): the heap allocation will likely
+will very likely yield two distinct
+return values (two pointers in RAM): the heap allocation will likely
 select two distinct free locations for the new object.
 But both references will refer to a brand new empty string.
 As long as the programming language does not allow one to see
@@ -118,7 +118,7 @@ holds in any version of the Java library, as well as
 since, in Java, truncation of \<double> into \<int> is machine-independent.
 Hence, a language for smart contracts, that must require determinism,
 can safely allow the use of that method, always. Other examples
-are the constructors of \<String>, \<java.lang.Object> or \<java.util.HashSet>
+are the constructors of \<String>, \<java.lang.Object> and \<java.util.HashSet>
 reported in Fig.~\ref{fig:determinism}, or methods
 \<String.concat(String other)>, that yields the concatenation of strings \<this> and \<other>,
 and \<String.length()>, that yields the length of a string.
@@ -133,7 +133,7 @@ use distinct implementations of the Java library. For instance, while
 \]
 holds in every implementation of the library, since the official documentation requires this method
 to cache values between $-128$ and $127$, inclusive, there is instead no guarantee that caching is
-used outside that range, hence
+used outside that range. Hence
 \[
 \<Integer.valueOf(2019) == Integer.valueOf(2019)>
 \]
@@ -146,14 +146,15 @@ use a specific version of the Java library, which can be part of the consensus r
 
 \subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
 Consider method \<Object.hashCode()> of class \<Object> now. It yields an \<int>
-hash of its receiver. In its current implementations, it computes that hash from the
+hash of its receiver. Its implementations computes that hash from the
 RAM pointer value of the object reference.
 Since two blockchain nodes will likely use different RAM pointers,
 this method is non-deterministic.
 In other terms, this method exposes an execution detail (the exact RAM pointer)
-that was meant to be invisible in our definition of determinism.
+that was meant to be invisible thanks to the notion of state equivalence used
+to define determinism.
 For instance, the following code, in two distinct blockchain nodes
-(and even for different executions on the same node),
+(and even in different executions on the same node),
 will likely assign different values to variable \<i>:
 %
 \begin{verbatim}
@@ -182,20 +183,24 @@ If that is the case, the calls will actually
 execute the redefinitions, that are typically deterministic. Hence, it seems sensible
 to allow calls to such methods in smart contracts, but only if their receiver
 redefines them in a deterministic way, as in the following example:
-%
+
+{\small
 \begin{verbatim}
 String o = ... // deterministic computation
 int h = o.hashCode(); // o holds a String, that redefines hashCode()
-\end{verbatim}
-%
+\end{verbatim}}
+
+\noindent
 or even in the following:
-%
+
+{\small
 \begin{verbatim}
 String s = ... // deterministic computation
 Object o = s;
 int h = o.hashCode(); // o holds a String, that redefines hashCode()
-\end{verbatim}
-%
+\end{verbatim}}
+
+\noindent
 In both cases, variable \<o>, at run time,
 holds a string and the deterministic (but potentially platform-specific)
 redefinition of \<hashCode()> inside \<String> will be called.
@@ -207,7 +212,7 @@ Consider methods \<iterator()> and \<stream()> of the generic class
 \<Collection$\text{<}$E$\text{>}$> now. They provide two different ways for
 processing the elements, of type $E$, of a collection. The former implements
 the traditional \emph{iterator pattern} and yields an object able to enumerate
-the elements. The second yields a \emph{stream}, that is,
+the elements. The latter yields a \emph{stream}, that is,
 an abstract description of a lazy algorithm on the
 elements, that can be subsequently programmed and executed.
 Streams implement the map/filter/reduce design pattern. Their specification
@@ -228,11 +233,10 @@ the distribution of elements inside the buckets varies from run to run and their
 as well, being implemented as a lexicographic scan of the buckets' elements.
 One could forbid \<HashSet> and only allow its
 more expensive sibling \<LinkedHashSet>, whose iteration order is fixed.
-But that would not solve the non-determinism of its \<add()> method, whose gas consumption
+But then method \<add()> would still be non-deterministic, since its gas consumption
 is affected by the shape of the buckets, as discussed later.
 Moreover, programmers like \<HashSet> and would be annoyed if it would be
-forbidden. It is much better to observe that, if the \<hashCode()> of all its elements has been
-redefined in a determinitsic way
+forbidden. It is much better to observe that, if the \<hashCode()> of all its elements has been redefined in a deterministic way
 and if a specific library version is fixed, then the behavior of \<HashSet> becomes
 deterministic, since the shape of the buckets is the same for every run. This means that one
 can allow, in smart contracts, calls to \<iterator()> and \<stream()> on any collection,
@@ -262,7 +266,7 @@ Hence, this method can be used but only if a specific library is used and
 if it is enforced that false is passed for \<p> at run time (Sec.~\ref{sec:enforcing}).
 
 \subsubsection*{Never Deterministic Methods.}
-The static method \<System.currentTimeMillis()>, in \<java.lang.System>,
+Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
 yields the number of milliseconds elapsed since the beginning of 1970.
 Not surprisingly, code using that method will likely get different measures in different
 blockchain nodes.

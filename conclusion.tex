@@ -14,7 +14,8 @@ code if objects are put in hashsets without redefining their \<hashCode()>.
 Our solution rejects the smart contracts in that case, statically or dynamically.
 
 Our specification and verification technique does not help with the
-identification of deterministic fragments of the Java library. Currently,
+identification of deterministic fragments of the Java library, that remains
+an open problem. Currently,
 we have checked the source code of the library to convince ourselves that,
 for instance, the fragment in Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
 \ref{fig:white_listed_Set}, \ref{fig:white_listed_List},

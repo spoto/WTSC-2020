@@ -45,7 +45,7 @@ passed to \<remove(Object o)> redefines \<hashCode()>. The node includes a
 \<Support> class that uses Java reflection to that purpose:
 
 {\small\begin{verbatim}
-class Support {
+public class Support {
   public static void mustRedefineHashCode(Object value) {
     if (value != null)
       if (Stream.of(value.getClass().getMethods())
@@ -132,8 +132,9 @@ The instrumentation technique described above adds dynamic checks on run-time va
 if these satisfy the conditions required by a white-listed fragment.
 Hence, checks are performed repeatedly, every time an annotated white-listed method
 is executed. This can incur in a performance penalty. It would be better
-to check if a run-time condition holds, definitely, when smart contracts are installed
-in blockchain.
+to check, once and for all,
+if a run-time condition holds, definitely, when smart contracts
+are installed in blockchain.
 This can be done with static analysis~\cite{NielsonNH99}, a technique that infers
 properties of programs, before they are actually run. Since the verification of
 non-trivial run-time program properties is in general undecidable~\cite{Rice53},

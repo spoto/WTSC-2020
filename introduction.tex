@@ -6,15 +6,15 @@ the fact that smart contracts operate on data kept in blockchain. They must
 support some special concepts, such as the access to the caller of a transaction,
 monetary transfers between contracts
 and payment of code execution through \emph{gas}.
-The same Bitcoin bytecode~\cite{Antonopoulos17,Nakamoto08}
+Such concepts are not natively available
+in traditional programming languages.
+Instead, the Bitcoin bytecode~\cite{Antonopoulos17,Nakamoto08}
 can be seen as a language for programming smart contracts,
 although non-Turing equivalent and mostly limited to coin transfers. The more
 powerful Solidity language~\cite{AntonopoulosW18},
 compiled into Ethereum bytecode, allows one to code
-more involved smart contracts, in an imperative high-level language, and is
+complex smart contracts, in an imperative high-level language, and is
 one of the main reasons behind the success of the Ethereum blockchain.
-Such concepts are instead not natively available
-in traditional programming languages.
 
 Recently, there have been efforts towards the use of traditional
 high-level languages for writing smart contracts. In particular, Java has
@@ -25,7 +25,7 @@ a large and powerful toolbelt and an active community.
 These efforts~\cite{aion,aion_example_contract,neo,neo_contract}
 [extra reference removed for blind review]
 typically allow programmers to write code in a limited subset of Java
-amd of its support library,
+and of its support library,
 with extra methods and classes to implement contracts, refer to their
 callers and implement monetary transfers.
 
@@ -37,10 +37,10 @@ of using it also for developing smart contracts. This reduces
 development time and errors, since the library has been widely tested
 in the last decades and its semantics is well-known. There is, however, a big
 issue here. Namely, the support library of Java is non-deterministic, in general,
-while smart contracts must be deterministic, fo reaching consensus.
+while smart contracts must be deterministic, for reaching consensus.
 
 Non-determinism is obvious for library classes and methods that support, explicitly,
-parallel processing or random computations. But the real problem is that
+parallel or random computations. But the real problem is that
 also some library parts, that are explicitly sequential, might lead to
 non-deterministic results.
 This is well-known to Java programmers and has been at the origin of subtle
@@ -68,4 +68,4 @@ This paper is \emph{not} about Java smart contracts themselves. The interested r
 is referred to the references provided above. Hence, this paper does not tackle
 the specific syntax, methods and technology needed for writing smart contracts in Java.
 Examples are presented in an abstract way, unrelated to any specific
-Java dialect for smart contracts or blockchain.
+Java dialect for smart contracts or any specific blockchain.

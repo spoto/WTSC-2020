@@ -14,7 +14,7 @@ run-time conditions are enforced. Such methods can hence be \emph{white-listed} 
 %
 The consensus rules must specify a white-listed fragment $\wl$:
 each node verifies that smart contracts \emph{obey} $\wl$,
-or otherwise reject their installation in blockchain.
+or otherwise aborts their execution in blockchain.
 %
 \begin{definition}\label{def:obeys}
   A program $P$ \emph{obeys} a white-listed fragment $\wl$ if and only if
@@ -28,7 +28,7 @@ or otherwise reject their installation in blockchain.
 %
 Note that a program $P$ that obeys a white-listed fragment $\wl$ cannot call signatures outside
 $\wl$, but can call library methods in $\wl$ that, indirectly, call methods outside $\wl$.
-In other terms, Def.~\ref{def:obeys} constrains only the allowed library API allowed in $P$.
+In other terms, Def.~\ref{def:obeys} constrains only the library API allowed in $P$.
 %
 \begin{definition}\label{def:deterministic}
   Given a Java library version $V$, a white-listed fragment $\wl$ is

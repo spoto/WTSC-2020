@@ -1,0 +1,207 @@
+Dear Fausto Spoto,
+
+We regret to inform you that your submission #36 "Enforcing Determinism of
+Java Smart Contracts" has not been accepted to the main conference of
+Financial Cryptography and Data Security – FC 2020. The reviews on your
+paper are appended below.
+
+However, we strongly encourage you to submit your paper to one of the
+associated workshops or for presentation in the Financial Crypto poster
+session, with deadlines approaching as follows:
+
+    VOTING'20: 5th Workshop on Advances in Secure Electronic Voting
+    November 18, 2019
+    https://fc20.ifca.ai/voting
+
+    Financial Crypto 2020 Poster Session
+    November 21, 2019
+    https://fc20.ifca.ai/cfp.html
+
+    WTSC'20: 4th Workshop on Trusted Smart Contracts
+    December 9, 2019 (abstracts)
+    December 12, 2019 (full papers)
+    https://fc20.ifca.ai/wtsc/
+
+    AsiaUSEC20: 1st Asian Workshop on Usable Security
+    November 30, 2019 (early)
+    December 19, 2019 (late)
+    https://easychair.org/cfp/AsiaUSEC20
+
+Note that in contrast to previous years, since all workshop deadlines are
+after the main conference paper notification date, papers will not be
+submitted automatically (even if you selected this option during paper
+submission). For consideration at one of these associated workshops or the
+poster session, you must submit your paper through the normal workshop (or
+poster) submission process.
+
+If you choose to submit to an associate workshop (or as a poster), you may
+revise your submission in response to the reviews from the main conference.
+However, the reviews on your original FC submission will be made available
+to the workshop chairs and your workshop submission may be evaluated based
+on these reviews alone at the discretion of the workshop chairs.
+
+We received a large number of submissions this year (162) and were only
+able to accept 22%, meaning we had to turn down many solid papers for the
+main conference.  The selection process by the program committee has been
+very thorough with each paper receiving between two and five reviews. In
+addition, the committee discussed each paper in a two-week discussion
+phase.
+
+Thank you very much for submitting to FC 2020. We hope that your paper will
+find a good home, at an associated workshop or elsewhere. In any case, we
+hope that you are able to attend the conference.
+
+Hope to see you in Kota Kinabalu!
+
+Nadia Heninger and Joseph Bonneau
+FC 2020 Program Chairs
+
+Review #36A
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+The paper defends using the well-known Java programming language to express smart contracts within a blockchain, due to its platform-independent nature, wide availability across platforms and rich support library. The authors deal with the consequences of this design decision by choosing an approach based on whitelisting a subset of the runtime library to enforce determinism. They detect which methods are deterministic by source code analysis of a popular implementation and implement a bytecode instrumentation framework to annotate and verify adherence to the whitelisted subset.
+
+Comments for author
+-------------------
+The paper is well-written and easy to understand, with many supporting examples to illustrate the techniques. However, the approach seems rather ad-hoc and manual, especially after reading the closing statements, which made me question to adopt Java as the smart contract programming language in the first way. There is no formal definition of what "determinism" means in the context of the paper. Although the specific notion is "borrowed" from other works [8,9], it is only explained through examples and never really formalized. Perfectly deterministic local code (such as "hashCode" methods) suddenly may become "non-deterministic" from the point of view of a blockchain running the code simultaneously in multiple nodes.
+
+The main design decision is also not very well supported or justified. The Java runtime library is absolutely huge after decades of operation, and it seems a smart contract language does not need to inherit all that complexity to be functional. Most of the relevant benefits stated in the introduction end up lost somehow: how much of the large support library is of interest to blockchain applications, and what fraction can be realistically whitelisted by manual inspection across multiple implementations? Would programmers still appreciate using a whitelisted version of such a complex API? How likely are errors to creep in production due to misunderstandings or implementation-specific interpretations of the API? To mention one confusing example, String.hashCode() is deterministic [1], but it is hard to say if this works across alternative implementations. I sincerely doubt that the approach could scale to a substantial subset of Java, but at the same time most of the Java library would
+  not be relevant.
+
+The implementation technique by bytecode instrumentation with annotations and runtime enforcement is clever, but validation is seriously lacking. There is a complexity estimate for checking a program in Section 3, which improves logarithmically if a total order can be defined on method signatures. However, no explicit algorithm or details about its implementation are given. The performance evaluation is restricted to a couple of sentences stating that it never took more than a second "on our machine". What is the benchmarking size? In which conditions were the experiments executed?
+
+Considering all of the above, I think that the research is in a rather preliminary state before it can be properly evaluated. Some minor presentation issues:
+- "There are well collections" is odd phrasing.
+- "semantics" is plural, hence I suggest rephrasing some of the sentences using it in singular.
+
+References:
+
+[1] https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#hashCode%28%29
+
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Review #36B
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+The paper proposes a technique to ensure that Java programs executed on a blockchain are deterministic. The authors achieve this by building a whitelist based on understandings of Java internals with both static and runtime conditions on whitelisted functions. The authors also propose a method to determine at runtime, when violations occur.
+
+Comments for author
+-------------------
+Strengths:
+
+ - The authors clearly identify a challenge for using a general purpose language like Java in a smart contract context and present a clear argument that a whitelisting technique will be sufficient to resolve the challenge.
+
+- Detailed walkthrough of a number of cases, illustrating the issue and proposed resolution
+
+Weaknesses:
+
+- The paper would be strengthened by an empirical evaluation of the authors technique. As the work is implementation heavy, it is a prerequisite for understanding how effective their proposed method is.
+
+   - The authors don’t consider an attacker who is able to modify the stored program or it’s execution at runtime, attempting to disrupt the network. As their scheme only dynamically tests a smart contract when first loaded, if the attacker inserts conditional logic to replace the deterministic functionality with non-deterministic functionality after the first run, they may succeed in creating inconsistency or other disruption. This could possibly be mitigated but at minimum should be discussed.
+
+    - The paper could better explore what set of functions are required for general use. Many smart contracts are very simple, to what extent is the whitelisting required for expected uses? The authors state that certain restrictions would be unacceptable. It would be useful for this to be supported by some reference to known uses.
+
+ - The authors spend considerable space examining toy contract examples that do not carry out meaningful activity. The illustrative force of the examples is unpersuasive in light of their extreme simplicity (including one contract that contains nothing but dead code).
+
+Other:
+
+ - It would strengthen the work to identify the effort needed to whitelist a real class or series of classes. It appears the authors use manual effort to identify most functions to whitelist, an interesting extension to the work would attempt to automate some portion of this process.
+
+
+
+Nits:
+
+- Page numbers are missing.
+
+ - It is unclear to me why the authors removed the name of the blockchain on which this runs. This seems to hinder evaluation of the paper as it is hard to evaluate underlying protocol assumptions without knowledge of what protocol their design is intended to support. Excluding mention of the protocol draws attention to the potential authors rather than drawing away from it.
+
+- For costing instrumentation, knowing a few details of the machine on which the experiment was run would be helpful
+
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Review #36C
+===========================================================================
+
+Overall merit
+-------------
+1. Reject
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+This paper describes a way to enforce determinism in Java, so that smart contracts can be written using the language. Miners/nodes must all compute the same updates to state, requiring that there not be any ambiguity in programs run on different machines. The paper identifies and provides workarounds for several non-determinisms in Java, for instance hashCode() using an object's dynamic (non-deterministic) heap address to compute its hash, leading to different nodes having HashSets contain elements in different orders. The paper works around this by providing a whitelisted subset of Java that is deterministic.
+
+Comments for author
+-------------------
+**Why not just use a custom deterministic JVM?**
+I was confused why the authors picked the method they did for enforcing determinism. It seems overly cumbersome and prone to failure, not to mention a whole lot of work (both dynamically at runtime and statically at contract instantiation). Would it be easier to make/modify a Java Virtual Machine that did not have such non-determinism? For instance, the JVM could use a deterministic heap allocator (to a known chunk in memory), could return static/deterministic values for dynamic system calls like currentTimeMillis() or parallel/thread calls. This is effectively what the Ethereum VM does, but for a custom bytecode. What are the challenges for doing that for Java?
+
+
+I'm still unsure if the paper is recommending that different versions of Java are or are not okay to use in this model. Figure 1 seems to imply that it's okay to pick things that are deterministic even if it's only deterministic on a specific platform and/or under certain conditions. But that seems pretty dangerous, since the paper can't possibly analyze all existing and future JVM versions to determine if particular code will be deterministic.
+
+**How do you know the paper identifies all cases of non-determinism?** The example of Integer.valueOf(2019) == Integer.valueOf(2019) being non-deterministic is downright frightening. How do you know you've caught every single potential case of non-determinism like that? Furthermore, this seems like an impossible task generally: how do you know a new version of Java won't redefine some core function (even if previously whitelisted) and have totally different behavior? There's a ton of research on Virtual Machine Red Pills that can detect if malware is running in a VM (and what version/type of VM) that seems to apply here. The paper doesn't appear to provide any analysis of how we can be certain that this can be trusted in practice. Again, specifying a JVM seems like the right answer here.
+
+**No example smart contracts** It would be nice if the paper evaluated the performance of the system: how much do the runtime checks cost? The paper claims adding them takes no more than 1 second (for how large of a contract? Modern computers do a lot of compute in 1 second...is this scalable to a modern existing blockchain?) Also, how does a Java smart contract compare to an equivalent one written in say, Solidity? I might buy the claim that programming in Java is more natural to existing developers, but note: the developer still has to understand the semantics of smart contracts/transactions/recursive send vulnerabilities, even if it's in a language they are familiar with. Also, the language won't be Java, as it will be the whitelisted subset of Java, and the paper does not make it clear what is/isn't being left out of the language from a practical standpoint.
+
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Review #36D
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+3. Knowledgeable
+
+Paper summary
+-------------
+This paper deals with making Java detertministic so one can write smart contracts [in the order-execute model] in Java. Albeit this is an important topic for the blockchain community it is not clear that Financial Cryptography is the right venue .
+
+Comments for author
+-------------------
+Authors neglect other blockchain execution frameworks, such as Hyperledger Fabric, that allow for smart contract non-determinism, including that of Java.
+
+It is unclear that the treatement of the subject is exhaustive.
+
+Detailed comments.
+-------
+- references [1,2,3,4] are not papers and are not good scientific references for problem of non-determinism of general purpose languages such as Java. Authors should cite well established and cited papers in this domain such as Andoulaki et. al, Hyperledger Fabric paper in Eurosys 2018, or Vukolic, Rethinking Permissioned Blockchains, ACM Workshop on BCC 2017. Hyperledger Fabric also supports Java smart contracts, even without removing non-detemrinism from Java.
+
+- What authors write with respect to non-determinism in Section I is true for order-execute blockchains, but there are other execution paradigms for smart contract execution that tolerate non-determinism such as execute-order-validate paradigm of sdaid Hyperledger Fabric. Authors should compare and contrast.
+
+- is Table in Figure 1 exhaustive?
+
+- Integer.valueOf(2019) == Integer.valueOf(2019) in which library this is not true?
+

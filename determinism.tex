@@ -4,7 +4,7 @@ This section discusses the different kinds of determinism of methods from
 the Java library and what must be required if they are used
 in a language for smart contracts.
 We recall that the Java library exists in different versions, from its first
-$1.0$ edition of 1996 to its $13$ edition expected to ship in September 2019.
+$1.0$ edition of 1996 to its $13$ edition of September 2019.
 Each version has different implementations, with OpenJDK probably being
 the most used, nowadays. Some classes and methods exist only in some versions of the library.
 For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
@@ -16,24 +16,26 @@ We report fully-qualified names of classes only the first time they are cited.
 Let us discuss the same meaning of \emph{determinism}.
 The \emph{state} of the Java interpreter is typically defined
 as a function from variables and object fields into values.
-Then the goal is to guarantee that the code of a given smart contract, executed
-from the same state but in two different blockchain nodes, yields the same result, \emph{i.e.},
-same next state and same return value (if any).
+Then the goal is to guarantee that the execution $\phi$ of a piece of code,
+from the same state $\sigma$ but in two different blockchain nodes, yields the same result, \emph{i.e.},
+same next state $\sigma'$ and same value $r$ (if the code is an expression):
+$\phi(\sigma)=\langle\sigma',r\rangle$ in all nodes of the network.
 This definition, however, is too strict. Consider the constructor method
 \<String()> of \<java.lang.String>, that instantiates and returns a new empty \<String>
-object. Its execution, from any given state but in two different blockchain nodes,
+object. It is an expression whose execution,
+from any given state $\sigma$ but in two different blockchain nodes,
 will very likely yield two distinct
-return values (two pointers in RAM): the heap allocation will likely
+pointers $r$ in RAM: the heap allocation will likely
 select two distinct free locations for the new object.
 But both references will refer to a brand new empty string.
-As long as the programming language does not allow one to see
-the exact pointer value of a reference, but only the object it refers to,
-then such two next states and references can be considered equivalent.
+As long as the programming language does not allow one to distinguish
+the exact pointers, but only the object it refers to,
+then such two next states and results can be considered \emph{equivalent}.
 This notion of state and reference equivalence is not new, but actually borrowed
 from~\cite{BanerjeeN05,BarthePR13}.
 With this interpretation in mind, method \<String()>, applied to two equivalent
 states but in two distinct blockchain nodes,
-yields equivalent states and equivalent return values (two references to
+yields equivalent states and equivalent results (two references to
 brand new empty strings), and is consequently deterministic.
 
 \begin{figure}[t]
@@ -104,7 +106,8 @@ deterministic, this applies to every implementation of
 
 \subsubsection*{Always Deterministic Methods.}
 Many methods of the Java library are clearly deterministic. Their behavior is fixed
-and does not change with distinct versions of the library. An example is the unwrapping
+by the official documentation by Oracle
+and does not change across distinct versions of the library. An example is the unwrapping
 method \<intValue()> of \<Number> (Fig.~\ref{fig:determinism}). It yields
 the primitive \<int> value corresponding to an instance of the abstract class \<Number>, such
 as objects of class \<Integer> or \<Double>. For instance,
@@ -122,6 +125,8 @@ are the constructors of \<String>, \<java.lang.Object> and \<java.util.HashSet>
 reported in Fig.~\ref{fig:determinism}, or methods
 \<String.concat(String other)>, that yields the concatenation of strings \<this> and \<other>,
 and \<String.length()>, that yields the length of a string.
+If only these methods are used, then any Java library can be used by any node of a blockchain,
+even distint versions in distinct nodes.
 
 \subsubsection*{Platform-Deterministic Methods.}
 The static method \<Integer.valueOf(int i)> wraps
@@ -138,11 +143,12 @@ used outside that range. Hence
 \<Integer.valueOf(2019) == Integer.valueOf(2019)>
 \]
 might be true in some implementations of the Java library
-and false in others, that yield distinct objects for the two calls.
+and false in others\footnote{For instance, it is false in Oracle JDK 13.0.1.}, that yield distinct objects for the two calls.
 We call \emph{platform deterministic} such methods, since they are deterministic only once a specific
-implementation (\emph{platform}) of the Java library is fixed. Such methods can be used in smart contracts,
-but only if all blockchain nodes are forced to
-use a specific version of the Java library, which can be part of the consensus rules.
+implementation (\emph{platform}) of the Java library is fixed.
+If only methods of this and of the previous categories are used, then
+all nodes of a blockchain must be run on a given, fixed Java library, to guarantee
+determinism. This could be part of the consensus rules.
 
 \subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
 Consider method \<Object.hashCode()> of class \<Object> now. It yields an \<int>
@@ -154,7 +160,7 @@ In other terms, this method exposes an execution detail (the exact RAM pointer)
 that was meant to be invisible thanks to the notion of state equivalence used
 to define determinism.
 For instance, the following code, in two distinct blockchain nodes
-(and even in different executions on the same node),
+(and even in repeated executions on the same node),
 will likely assign different values to variable \<i>:
 %
 \begin{verbatim}
@@ -219,7 +225,7 @@ Streams implement the map/filter/reduce design pattern. Their specification
 makes heavy use of lamba expressions.
 The interesting point is that neither method
 guarantees any specific enumeration order: the elements will be
-enumerated in any order, in general. There are well collections for which they
+enumerated in any order, in general. There are collections for which they
 guarantee an order, such as instances of \<java.util.List$\text{<}$E$\text{>}$>:
 on lists, enumeration proceeds from head to tail;
 or instances of \<java.util.LinkedHashSet$\text{<}$E$\text{>}$>, on which they proceed in
@@ -235,8 +241,10 @@ One could forbid \<HashSet> and only allow its
 more expensive sibling \<LinkedHashSet>, whose iteration order is fixed.
 But then method \<add()> would still be non-deterministic, since its gas consumption
 is affected by the shape of the buckets, as discussed later.
-Moreover, programmers like \<HashSet> and would be annoyed if it would be
-forbidden. It is much better to observe that, if the \<hashCode()> of all its elements has been redefined in a deterministic way
+Moreover, programmers like \<HashSet>, that is a very frequently class used
+in Java code, and they would be annoyed if it would be
+forbidden. It is much better to observe that,
+if the \<hashCode()> of all its elements has been redefined in a deterministic way
 and if a specific library version is fixed, then the behavior of \<HashSet> becomes
 deterministic, since the shape of the buckets is the same for every run. This means that one
 can allow, in smart contracts, calls to \<iterator()> and \<stream()> on any collection,
@@ -264,6 +272,10 @@ Passing true for \<p> would yield a parallel stream instead, that is
 inherently non-deterministic and cannot be allowed in smart contracts.
 Hence, this method can be used but only if a specific library is used and
 if it is enforced that false is passed for \<p> at run time (Sec.~\ref{sec:enforcing}).
+
+If only methods of this and of the previous two categories are used, then
+all nodes of a blockchain must be run on a given, fixed Java library, \emph{and}
+the run-time conditions that entail determinism must be somehow enforced.
 
 \subsubsection*{Never Deterministic Methods.}
 Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
@@ -301,3 +313,6 @@ the look-up.
 In general, methods that introduce parallelism are never deterministic.
 Another example is \<Thread.start()> in \<java.lang.Thread>, that spawns
 a parallel execution thread.
+
+If methods of this category are used, then the code cannot be used in blockchain,
+since there is not way to make it deterministic.

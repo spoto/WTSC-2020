@@ -26,8 +26,8 @@ or otherwise aborts their execution in blockchain.
   \end{enumerate}
 \end{definition}
 %
-Note that a program $P$ that obeys a white-listed fragment $\wl$ cannot call signatures outside
-$\wl$, but can call library methods in $\wl$ that, indirectly, call methods outside $\wl$.
+A program $P$ that obeys a white-listed fragment $\wl$ cannot call signatures outside
+$\wl$, but can call signatures in $\wl$ that, indirectly, call methods outside $\wl$.
 In other terms, Def.~\ref{def:obeys} constrains only the library API allowed in $P$.
 %
 \begin{definition}\label{def:deterministic}
@@ -40,21 +40,18 @@ In other terms, Def.~\ref{def:obeys} constrains only the library API allowed in 
 A very simple example of white-listed fragment is
 $\wl_1=\emptyset$. It is deterministic for every Java library version.
 Namely, a program $P$ that obeys $\wl_1$ cannot call any library method nor constructor
-(condition 1 of Def.~\ref{def:obeys}). $P$ cannot contain classes, since Java classes
+(condition~1 of Def.~\ref{def:obeys}). $P$ cannot contain classes, since Java classes
 have always at least a constructor that calls the constructor of \<Object>, possibly
 indirectly. Hence, $P$ consists of interfaces only,
 with default and static methods that do not call any library code, and is hence
 deterministic.
-
 A deterministic white-listed fragment is $\wl_2=\{\<Object()>\}$. It contains
 the constructor of class \<Object> only. This time, it is possible to write programs $P$
 that obey $\wl_2$, with classes that extend \<Object> and whose constructors call \<Object()>.
 But no other library methods nor contructors can be called, which is an irrealistic constraint.
-
 The white-listed fragment $\wl_3=\{\<Object()>,\<System.currentTimeMillis()>\}$ is not deterministic,
 since it is possible to write a program, that obeys $\wl_3$, consisting of a single class
 with a method that uses \<System.currentTimeMillis()> to return a random value.
-
 A deterministic white-listed fragment that allows, at least, simple string manipulations is
 $\wl_4=\{\<Object()>,\<String.concat(String other)>,\<String.length()>\}$. It allows one
 to write Java programs whose classes extend \<Object> and whose code performs computations
@@ -75,16 +72,17 @@ Let us introduce for instance the following annotations:
 \item[\<@MustBeFalse>:] the annotated value is \<false>.
 \end{description}
 %
-With these annotations, it is possible to define the white-listed fragment:
+Then one can define
 %
-\[
-\wl_5=\left\{\begin{array}{c}
-\mbox{\<Object()>},\\
-\mbox{\<@MustRedefineHashCodeOrToString Object.toString()>},\\
-\mbox{\<HashSet$\text{<}$E$\text{>}$()>},\\
-\mbox{\<Collection$\text{<}$E$\text{>}$.add(@MustRedefineHashCode E e)>}
-\end{array}\right\}
-\]
+%\[
+$\wl_5=\{%\begin{array}{c}
+\<Object()>, %\\
+\<@MustRedefineHashCodeOrToString>\linebreak \<Object.toString()>, %\\
+\<HashSet\text{<}E\text{>}()>, %\\
+\<Collection\text{<}E\text{>}.add(@MustRedefineHashCode E e)> %}
+  %\end{array}\right
+  \}$
+%\]
 %
 that constrains \<Object.toString()> to be called on values that redefine
 at least one of \<hashCode()> and \<toString()>, and
@@ -93,22 +91,21 @@ with an actual parameter that redefines \<hashCode()>. $\wl_5$ is deterministic
 for any given Java library version, thanks
 to such constraints. For instance, the following code is deterministic
 on any Java library:
-%
-\begin{verbatim}
+
+{\scriptsize\begin{verbatim}
 Set<Object> set = new HashSet<>();
-set.add("hello");
-set.add(BigInteger.ONE);
-set.add(new HashSet<String>());
+set.add("hello"); set.add(BigInteger.ONE); set.add(new HashSet<String>());
 String s = set.toString();
-\end{verbatim}
-%
-This code creates a hashset and populates it with a
+\end{verbatim}}
+
+\noindent
+It creates a hashset and populates it with a
 \<String>, a \<java.math.BigInteger> and an empty \<HashSet>. All these three
-classes redefine method \<hashCode()> hence the constraint on \<add()> holds.
+classes redefine method \<hashCode()>, hence the constraint on \<add()> holds.
 At the end, the code calls \<toString()> on the hashset.
 The class \<HashSet> of \<set> redefines \<toString()>, hence the constraint
 on \<toString()> holds. By using, for instance, the
-OpenJDK 8 library implementation, variable \<s> will always hold the string
+OpenJDK~8 library, variable \<s> will always hold the string
 \<"[[], 1, hello]">. Other versions of the library might compute different strings but,
 once a library version is fixed, always the same string is computed.
 The reason of this determinism is that the shape of the buckets of the hashset is fixed
@@ -121,15 +118,18 @@ their \<toString()>, which is redefined and deterministic in
 The justification above for the determinism of the code follows from
 a manual investigation of the library's source code. It is not automated. What can
 be automated is, instead, the verification that a program $P$ obeys a given $\wl$.
-Namely, condition 1 of Def.~\ref{def:obeys} can be checked
-in time $O(|P|\cdot h\cdot\log_2|\wl|)$, where $|P|$ is the size of $P$,
-$h$ is the maximal height of the class
-hierarchy and $|\wl|$ is the size of $\wl$.
-Namely, for the static target of every call in $P$, it is enough
-to follow the class hierarchy upwards, while checking if the method is in $\wl$. If a total
-order is defined on method signatures, this last check can be done through binary search,
-with logarithmic complexity. Condition 2 of Def.~\ref{def:obeys} is more complex and
-Sec.~\ref{sec:enforcing} will consider how it can be enforced.
+Namely, condition~1 of Def.~\ref{def:obeys} can be verified
+%in time $O(|P|\cdot h\cdot\log_2|\wl|)$, where $|P|$ is the size of $P$,
+%$h$ is the maximal height of the class
+%hierarchy and $|\wl|$ is the size of $\wl$.
+%Namely,
+by following the static target of each call in $P$, upwards,
+and checking if the method is in $\wl$.
+%If a total
+%order is defined on method signatures, this last check can be done through binary search,
+%with logarithmic complexity.
+Condition~2 of Def.~\ref{def:obeys} is more complex and
+Sec.~\ref{sec:enforcing} shows how it can be enforced.
 
 A white-listed fragment $\wl$ must be specified in a way that is easily machine-readable.
 $\wl$ is a set of method signatures, hence it can be provided
@@ -145,20 +145,14 @@ which is both simple and efficient, compared for instance to querying textual or
 specifications.
 
 \begin{figure}[t]
-\begin{verbatim}
+{\scriptsize\begin{verbatim}
 public abstract class whitelisted.java.lang.Object {
   public Object() {}
   public abstract boolean equals(java.lang.Object other);
   public abstract @MustRedefineHashCodeOrToString java.lang.String toString();
   public abstract @MustRedefineHashCode int hashCode();
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of class \<Object>.}
-\label{fig:white_listed_Object}
-\end{figure}
 
-\begin{figure}[t]
-\begin{verbatim}
 public interface whitelisted.java.util.Collection<E> {
   int size();
   boolean isEmpty();
@@ -177,26 +171,20 @@ public interface whitelisted.java.util.Collection<E> {
   java.util.stream.Stream<E> stream();
   java.lang.Iterator<E> iterator();
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of interface \<Collection>.}
-\label{fig:white_listed_Collection}
-\end{figure}
 
-\begin{figure}[t]
-\begin{verbatim}
 public interface whitelisted.java.util.Set<E> {
   boolean containsAll(java.util.Collection<?> c);
   boolean addAll(java.util.Collection<? extends E> c);
   boolean retainAll(java.util.Collection<?> c);
   boolean removeAll(java.util.Collection<?> c);
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of interface \<Set>.}
-\label{fig:white_listed_Set}
+\end{verbatim}}
+\caption{A specification of the white-listed methods of \<Object>, \<Collection> and \<Set>.}
+\label{fig:white_listed_Object_Collection_Set}
 \end{figure}
 
 \begin{figure}[t]
-\begin{verbatim}
+{\scriptsize\begin{verbatim}
 public interface whitelisted.java.util.List<E> {
   E get(int index);
   E remove(int index);
@@ -212,26 +200,14 @@ public interface whitelisted.java.util.List<E> {
   java.util.List<E> subList(int fromIndex, int toIndex);
   java.util.Spliterator<E> spliterator();
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of interface \<List>.}
-\label{fig:white_listed_List}
-\end{figure}
 
-\begin{figure}
-\begin{verbatim}
 public class whitelisted.java.util.HashSet<E> {
   public HashSet() {}
   public HashSet(java.util.Collection<? extends E> c) {}
   public HashSet(int initialCapacity, float loadFactor) {}
   public HashSet(int initialCapacity) {}
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of class \<HashSet>.}
-\label{fig:white_listed_HashSet}
-\end{figure}
 
-\begin{figure}
-\begin{verbatim}
 public abstract class whitelisted.java.util.ArrayList<E> {
   public ArrayList() {}
   public ArrayList(int size) {}
@@ -239,60 +215,57 @@ public abstract class whitelisted.java.util.ArrayList<E> {
   public abstract void trimToSize();
   public abstract void ensureCapacity(int minCapacity);
 }
-\end{verbatim}
-\caption{A specification of the white-listed methods of class \<ArrayList>.}
-\label{fig:white_listed_ArrayList}
+\end{verbatim}}
+\caption{A specification of the white-listed methods of \<List>, \<HashSet> and \<ArrayList>.}
+\label{fig:white_listed_List_HashSet_ArrayList}
 \end{figure}
 
-For instance, Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
-\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
-\ref{fig:white_listed_HashSet} and~\ref{fig:white_listed_ArrayList}
+For instance, Figs.~\ref{fig:white_listed_Object_Collection_Set}
+and~\ref{fig:white_listed_List_HashSet_ArrayList}
 specify a white-listed fragment of \<Object>,
-\<Collection>, \<Set>, \<List>, \<HashSet> and \<ArrayList>,
-respectively.\footnote{These method and constructor signatures are copy and paste from the
+\<Collection>, \<Set>, \<List>, \<HashSet> and
+\<ArrayList>\footnote{These method and constructor signatures are copy and paste from the
 library source code. For the use of generics, wildcards and
-\<Object> in these signatures, we refer to~\cite{NaftalinW06}.}
+\<Object> in these signatures, we refer to~\cite{NaftalinW06}.}.
 It is deterministic for a given fixed version of the Java library:
 thanks to its annotations, this fragment guarantees that elements in collections
 (hence also in sets and lists) redefine \<hashCode()>, which makes iterators
 on collections, streams derived from collections and \<toString()> on collections
 deterministic. The latter can be called on collections since they redefine it,
-hence satisfying the constraint in Fig.~\ref{fig:white_listed_Object}.
+hence satisfying the constraint for \<Object>.
 
 It is interesting to observe that method
-\<contains(Object o)> in \<Collection> (Fig.~\ref{fig:white_listed_Collection})
+\<contains(Object o)> in \<Collection> (Fig.~\ref{fig:white_listed_Object_Collection_Set})
 requires \<o> to redefine \<hashCode()>
 or otherwise, for hashsets, the bucket where \<o> is looked for might be different
 for different runs, with subsequent non-determinism.
 That constraint has been lifted for \<contains(Object o)> in \<List>
-(Fig.~\ref{fig:white_listed_List}), since its implementation, for lists,
+(Fig.~\ref{fig:white_listed_List_HashSet_ArrayList}), since its implementation, for lists,
 scans the list from head to tail,
 looking for an \<equals()> element, with deterministic behavior,
 regardless of \<o> having redefined \<hashCode()> or not. This is an application
 of the Liskov substitution principle~\cite{LiskovW94}:
 white-listing constraints can be weakened in subclasses,
-but not strengthened. The same applies to \<remove(Object o)>, passing from
+but not strengthened. The same for \<remove(Object o)>, passing from
 \<Collection> to \<List>.
 
 There is no single largest deterministic fragment
 for a given set of classes and interfaces. For instance, 
 there is another deterministic fragment for the same classes considered in
-Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
-\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
-\ref{fig:white_listed_HashSet} and~\ref{fig:white_listed_ArrayList}, identical
+Figs.~\ref{fig:white_listed_Object_Collection_Set}
+and~\ref{fig:white_listed_List_HashSet_ArrayList}, identical
 to those figures but allowing any elements in lists, possibly not redefining
 \<hashCode()> (hence more permissive);
-forbidding \<Object.toString()> and \<Object.hashCode()> altogether
-(Fig.~\ref{fig:white_listed_Object}),
+forbidding \<Object.toString()> and \<Object.hashCode()> altogether,
 since it would now be non-deterministic on lists (hence
 more restrictive); and forbidding the conversion constructor
 \<HashSet(Collection$\text{<}$? extends E$\text{>}$ c)>
-(Fig.~\ref{fig:white_listed_HashSet}), that would allow a hashset to be
+(Fig.~\ref{fig:white_listed_List_HashSet_ArrayList}), that would allow a hashset to be
 built from a list and hence contain elements whose \<hashCode()> has not been redefined,
 with consequent non-determinism (hence more restrictive). The choice between alternative
 deterministic fragments is often a question of personal taste.
 One should choose the one that allows more methods of frequent use. In this example,
 forbidding \<Object.toString()> and \<Object.hashCode()> would hardly be acceptable in practice.
-In principle, blockchain nodes could know about more deterministic fragments and check
-if a smart contract obeys at least one of them, hence allowing more code, in general.
-In practice, the extra cost of using more fragments might not justify the effort.
+%In principle, blockchain nodes could know about more deterministic fragments and check
+%if a smart contract obeys at least one of them, hence allowing more code.
+%In practice, the complexity of dealing with more fragments might not justify the effort.

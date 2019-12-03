@@ -78,7 +78,7 @@
 %
 \begin{frontmatter}
   \title{Enforcing Determinism of Java Smart Contracts}
-  \author{Anonymous Authors}
+  %\author{Anonymous Authors}
 %\author{Fausto Spoto}
 %\institute{Dipartimento di Informatica, Universit\`a di Verona, Italy\\
 %  \email{fausto.spoto@univr.it}}
@@ -86,19 +86,19 @@
 \maketitle
 %
 \begin{abstract}
-  Java is a high-level, well-known and powerful object-oriented programming
+  Java is a high-level, well-known and powerful object-oriented
   language, with a large support library and a comfortable toolbelt.
-  Hence, it is progressively being proposed for programming smart contracts
+  Hence, it is progressively being proposed for writing smart contracts
   in blockchain. However, its support library is non-deterministic,
   which is a blocking issue for its application to smart contracts.
   This paper discusses the kind of (non-)determinism of the methods
-  of the Java library and how a deterministic fragment of that library can be specified,
-  that can be used for writing smart contracts. Moreover, it
-  shows that some relevant parts of the library are deterministic
-  only under specific conditions on run-time values,
-  and concludes with the description of
-  an instrumentation that enforces such conditions, statically or dynamically.
-  The technique has been implemented for the Takamaka blockchain.
+  of the Java library and how a deterministic fragment of that library can be specified.
+  It shows that some relevant parts are deterministic
+  only under specific conditions on run-time values.
+  It concludes with the description of
+  an instrumentation, for the Takamaka blockchain,
+  that enforces such conditions, statically or dynamically,
+  reporting experiments with its implementation.
 \end{abstract}
 %
 \end{frontmatter}

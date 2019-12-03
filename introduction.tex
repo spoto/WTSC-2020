@@ -1,24 +1,24 @@
 \section{Introduction}\label{sec:introduction}
 
 Smart contracts are programs that specify the effects of running blockchain transactions.
-They are written in specialized programming languages, that take into account
-the fact that smart contracts operate on data kept in blockchain. They must
+They are written in specialized languages, that take into account
+the fact that they operate on data kept in blockchain. They must
 support some special concepts, such as the access to the caller of a transaction,
 monetary transfers between contracts
 and payment of code execution through \emph{gas}.
 Such concepts are not natively available
 in traditional programming languages.
 Instead, the Bitcoin bytecode~\cite{Antonopoulos17,Nakamoto08}
-can be seen as a language for programming smart contracts,
+can be seen as a language for smart contracts,
 although non-Turing equivalent and mostly limited to coin transfers. The more
-powerful Solidity language~\cite{AntonopoulosW18},
+powerful Solidity~\cite{AntonopoulosW18},
 compiled into Ethereum bytecode, allows one to code
 complex smart contracts, in an imperative high-level language, and is
-one of the main reasons behind the success of the Ethereum blockchain.
+one of the main reasons behind the success of Ethereum.
 
 Recently, there have been efforts towards the use of traditional
 high-level languages for writing smart contracts.
-A notable example is the Hyperledger Fabric blockchain~\cite{AndroulakiBBCCC18,Vukolic17}, that allows one
+A notable example is Hyperledger Fabric~\cite{AndroulakiBBCCC18,Vukolic17}, that allows one
 to write smart contracts in Java, among other languages. Quoting from~\cite{AndroulakiBBCCC18},
 ``blockchain domain-specific languages are difficult to design for the implementer
 and require additional learning by the programmer. Writing smart contracts
@@ -27,16 +27,13 @@ appears more attractive and accelerates the adoption of blockchain solutions''.
 In particular, Java is a well-known programming language,
 with modern features such as generics, inner classes, lambda
 expressions and lazy streams. For instance, a Solidity contract
-for a Ponzi pyramid scheme is 39 non-blank non-comment lines of code
-(page~155 of~\cite{IyerD18}), while the same contract in Java is made of 19 non-blank
-non-comment lines of code (it can be found in the companion archive
+for a Ponzi pyramid scheme consists of 39 non-blank non-comment lines of code
+(page~155 of~\cite{IyerD18}), while its translation in Java of only 19 lines
+(it can be found in the companion archive
 with experiments, see Sec.~\ref{sec:experiments}).
 Java has a large and powerful toolbelt and an active community.
 Also other blockchains~\cite{aion,aion_example_contract,neo,neo_contract,Spoto19}
-let programmers write code in a limited subset of Java
-and of its support library,
-with extra methods and classes to implement contracts, refer to their
-callers and implement monetary transfers.
+let programmers code in a limited subset of Java.
 
 One of the most compelling reasons for writing smart contracts
 in a mainstream language such as Java is that it comes with a large
@@ -49,8 +46,7 @@ issue here. Namely, the support library of Java is non-deterministic, in general
 For most blockchains, non-determinism leads to a fork of the network, since
 consensus cannot be reached. Hyperledger Fabric allows instead non-determinism,
 in the sense that code executions, if non-deterministic, get rejected~\cite{Vukolic17}.
-Hence, also in this case, programmers should avoid non-determinism, if they want their code to be
-run in blockchain.
+Hence, also in this case, programmers should avoid non-determinism, if they want their code to be run.
 
 Non-determinism is obvious for library classes and methods that support, explicitly,
 parallel or random computations. But the real problem is that
@@ -61,22 +57,22 @@ bugs also in traditional software. For smart contracts, however,
 this situation cannot be tolerated: the execution of the same code, from the same state,
 \emph{must} lead to the same result in any two distinct blockchain nodes.
 
-A solution could be to write a specific Java library, whose
+A solution could be to write a special Java library, whose
 methods are made deterministic. But this is far from simple, since the Java library is huge
-and some modifications would interfere with very low-level aspects of the language, such as
+and determinism would require to modify very low-level aspects of the same virtual machine, such as
 its memory allocation strategy and its garbage collectors.
-The process should be repated for each new version of the library.
-Moreover, programmers should be adviced to use a library with a different semantics than the usual one.
+The process should be repeated at each new version of Java.
+Moreover, programmers should be aware to use a non-standard library, with a different semantics.
 Finally, one should be sure to have fixed \emph{all} possible sources of non-determinism in the
 (immense) Java library.
 Instead, this paper advocates the use of a standard, fixed Java library, restricted to a white-listed
 fragment and with the addition of a verification layer that enforces some run-time conditions.
 It must be ensured that this fragment is deterministic, which is typically small (but still
 large if compared to, say, Solidity, that has \emph{no} support library). One needn't prove
-to have caught every single potential case of non-determinism in the library. One only needs to
-prove that the white-listed sandbox is safe.
+to have caught every single potential case of non-determinism in the library, but only that
+the white-listed sandbox is safe.
 
-Namely, the contributions of this paper are a discussion of the (non-)determinism
+Namely, the contributions of this paper are a discussion of the (non-)determi\-nism
 of the Java library methods; a way for specifying deterministic fragments
 of that library; a technique for
 enforcing some run-time conditions needed for determinism, statically or dynamically;
@@ -87,25 +83,25 @@ Its deterministic fragment has been specified manually, since there is
 currently no automatic way of proving that a method is deterministic.
 The Takamaka blockchain verifies and then instruments the code of the smart contracts, that gets
 then installed, in instrumented form, in blockchain~\cite{Spoto19}. Later, transactions execute the
-instrumented code, not the original one. All nodes perform verification and instrumentation
-and must agree on the result. It is not possible that an attacker modifies the instrumented program
+instrumented code, never the original one. All nodes perform verification and instrumentation
+and must agree on the result. An attacker cannot modify the instrumented program
 or its execution semantics after it has been installed in blockchain.
 
 This work is organized as follows.
 Sec.~\ref{sec:determinism} discusses the (non-)determinism featured by some
 examples of Java library methods.
-Sec.~\ref{sec:white_listing} defines the notion of \emph{deterministic white-listed fragment} of the Java library,
-that is, a deterministic subset of the library that can be used for writing smart contracts.
+Sec.~\ref{sec:white_listing} defines the notion of \emph{deterministic white-listed fragment} of the Java library.
+%that is, a deterministic subset of the library that can be used for writing smart contracts.
 Its definition can use run-time conditions on the way its methods are called.
 Sec.~\ref{sec:enforcing} provides a technique for enforcing such conditions, dynamically
 or statically, through bytecode instrumentation.
-Sec.~\ref{sec:experiments} reports experiments with an implementation of the technique.
+Sec.~\ref{sec:experiments} reports experiments with an implementation.
 
 This paper is \emph{not} about Java smart contracts themselves. The interested reader
 is referred to the references provided above and, in particular, to~\cite{Spoto19}
-and the tutorial about Takamaka smart contracts in
+and to the tutorial about Takamaka smart contracts in
 Java\footnote{Available at \url{https://www.takamaka.dev/docs/Takamaka.html}}.
-Hence, this paper does not tackle
-the specific syntax, methods and technology needed for writing smart contracts in Java.
-Examples are presented in an abstract way, unrelated to any specific
-Java dialect for smart contracts or any specific blockchain.
+%Hence, this paper does not tackle
+%the specific syntax, methods and technology needed for writing smart contracts in Java.
+%Examples are presented in an abstract way, unrelated to any specific
+%Java dialect for smart contracts or any specific blockchain.

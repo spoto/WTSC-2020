@@ -2,26 +2,17 @@
 
 The technique in this paper allows a simple
 specification of a deterministic fragment of the Java library and
-enforces its run-time constraints on values.
-Its implementation works in practice and does not incur
+enforces its run-time constraints.
+Experiments show that it works in practice and does not incur
 in size or time degradation of the compiled code.
-The technique is general, although we focused on the
-relevant issue of avoiding \<Object.hashCode()>'s non-determinism.
-For that special case, it could be possible to patch the Java library
-with an implementation of \<Object.hashCode()> that constantly and
-deterministically yields a constant. That would work for this run-time condition
-but would be invasive (all blockchain nodes should use a patched,
-unofficial version of the Java library). It would also lead to very inefficient
-code if objects are put in hashsets without redefining their \<hashCode()>.
-Our solution rejects the smart contracts in that case, statically or dynamically.
+Current work consists in enlarging the white-listed fragment.
 
-Our specification and verification technique does not help with the
-identification of deterministic fragments of the Java library, that remains
-an open problem. Currently,
-we have checked the source code of the library to convince ourselves that,
-for instance, the fragment in Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Collection},
-\ref{fig:white_listed_Set}, \ref{fig:white_listed_List},
-\ref{fig:white_listed_HashSet} and~\ref{fig:white_listed_ArrayList} is deterministic.
-Static analysis could help here, if it could prove some fragment deterministic,
-automatically. But the complexity of the library code, the need to infer
-sensible run-time conditions and the use of native code seem to make this task very hard.
+%Our specification and verification technique does not help with the
+%identification of deterministic fragments of the Java library, that remains
+%an open problem. Currently,
+%we have checked the source code of the library to convince ourselves that,
+%for instance, the fragment in Figs.~\ref{fig:white_listed_Object}, \ref{fig:white_listed_Object_Collection_Set}
+%and~\ref{fig:white_listed_List_HashSet_ArrayList} is deterministic.
+%Static analysis could help here, if it could prove some fragment deterministic,
+%automatically. But the complexity of the library code, the need to infer
+%sensible run-time conditions and the use of native code seem to make this task very hard.

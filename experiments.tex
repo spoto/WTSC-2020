@@ -1,0 +1,27 @@
+\section{Experiments}\label{sec:experiments}
+
+Intel® Core™ i3-4150 CPU @ 3.50GHz × 4 with Linux Ubuntu 18.04
+
+\begin{figure}
+  \begin{center}
+\begin{tabular}{|l||r|r|r||r|r||r|}
+  \hline
+  file & \#m & \#c & \#d & pre size & after size & instr.\ time \\\hline\hline
+  \<auctions.jar> & 20 & 0 & 0 & 11997 & 11997 & 4 \\\hline
+  \<basicdependencies.jar> & 38 & 3 & 0 & 7265 & 7505 & 26 \\\hline
+  \<basic.jar> & 38 & 8 & 0 & 8109 & 8464 & 31 \\\hline
+  \<collections.jar> & 0 & 0 & 0 & 8909 & 8909 & 4 \\\hline
+  \<crowdfunding.jar> & 0 & 0 & 0 & 10043 & 10043 & 4 \\\hline
+  \<io-takamaka-code.jar> & 348 & 18 & 5 & 88101 & 89177 & 223 \\\hline
+  \<javacollections.jar> & 38 & 17 & 0 & 3040 & 3635 & 18 \\\hline
+  \<lambdas.jar> & 45 & 3 & 0 & 4570 & 4745 & 27 \\\hline
+  \<ponzi.jar> & 69 & 7 & 0 & 12964 & 13556 & 43 \\\hline
+  \<purchase.jar> & 0 & 0 & 0 & 5362 & 5362 & 4 \\\hline
+  \<tictactoe.jar> & 40 & 0 & 0 & 6745 & 6745 & 27 \\\hline
+  \<voting.jar> & 8 & 1 & 0 & 7210 & 7305 & 20 \\\hline
+\end{tabular}
+  \end{center}
+  \caption{Tests.}
+  \end{figure}
+
+For 113 tests, it takes 115 seconds.

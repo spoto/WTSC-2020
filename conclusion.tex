@@ -3,6 +3,8 @@
 The technique in this paper allows a simple
 specification of a deterministic fragment of the Java library and
 enforces its run-time constraints on values.
+Its implementation works in practice and does not incur
+in size or time degradation of the compiled code.
 The technique is general, although we focused on the
 relevant issue of avoiding \<Object.hashCode()>'s non-determinism.
 For that special case, it could be possible to patch the Java library

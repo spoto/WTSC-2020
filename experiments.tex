@@ -1,12 +1,21 @@
 \section{Experiments}\label{sec:experiments}
 
-Intel® Core™ i3-4150 CPU @ 3.50GHz × 4 with Linux Ubuntu 18.04
+This section reports experiments with the addition of white-listing annotations
+to a set of Takamaka smart contracts. Experiments have been performed on
+an Intel 4-Core i3-4150 at $3.50$GHz with 16GB of RAM, running Linux Ubuntu 18.04.
+A companion archive, provided with this paper\footnote{We have submitted the archive
+with this paper and expect that it has been made available to the anonymous reviewers.},
+contains (1) the fragment of white-listed library methods
+used in these experiments; (2) the source code of the contracts
+contained in the twelve jars reported in Fig.~\ref{fig:experiments};
+(3) the same jars, instrumented without the addition of the white-listing
+checks; and (4) the same jars, instrumented with the addition of the white-listing checks.
 
-\begin{figure}
+\begin{figure}[t]
   \begin{center}
 \begin{tabular}{|l||r|r|r||r|r||r|}
   \hline
-  file & \#m & \#c & \#d & pre size & after size & instr.\ time \\\hline\hline
+  archive of smart contracts & \#m & \#c & \#d & without & with & instr.\ time \\\hline\hline
   \<auctions.jar> & 20 & 0 & 0 & 11997 & 11997 & 4 \\\hline
   \<basicdependencies.jar> & 38 & 3 & 0 & 7265 & 7505 & 26 \\\hline
   \<basic.jar> & 38 & 8 & 0 & 8109 & 8464 & 31 \\\hline
@@ -21,7 +30,51 @@ Intel® Core™ i3-4150 CPU @ 3.50GHz × 4 with Linux Ubuntu 18.04
   \<voting.jar> & 8 & 1 & 0 & 7210 & 7305 & 20 \\\hline
 \end{tabular}
   \end{center}
-  \caption{Tests.}
+  \caption{The jars of smart contracts used for the experiments. Each jar
+    contains one or more contracts. For each jar, \#m is the number
+    of calls to constructors or methods of the Java library;
+    \#c is the number of white-listing conditions that must be checked
+    for those calls; \#d is the subset of \#c that has been discharged
+    statically, at instrumentation time; \emph{without} is the size
+    (in bytes) of the instrumented jar without the addition of run-time checks
+    for the remaining $\#c - \#d$ conditions; \emph{with}
+    is the size (in bytes) of the instrumented jar with the addition of the
+    run-time checks for the remaining $\#c - \#d$ conditions;
+    \emph{instr.\ time} is the time for computing such instrumented jars (in milliseconds).}
+  \label{fig:experiments}
   \end{figure}
 
-For 113 tests, it takes 115 seconds.
+Fig.~\ref{fig:experiments} reports the jar archives used for the experiments.
+They contain smart contracts for auctions (\<auctions.jar>), for the definition
+of objects in blockchain (\<basicdependencies.jar>), for the use of such objects
+as a library (\<basic.jar>), a library of collection classes explicitly developed
+for Takamaka (\<collections.jar>), contracts for crowdfunding (\<crowdfunding.jar>),
+the run-time support library specific of Takamaka (\<io-takamaka-code.jar>),
+contracts using the Java collections (\<javacollections.jar>), contracts
+testing the use of lambda expressions (\<lambdas.jar>), Ponzi contracts
+(\<ponzi.jar>), a remote purchase contract (\<purchase.jar>), a tic-tac-toe
+game contract (\<tictactoe.jar>) and contracts for electronic voting (\<voting.jar>).
+
+In Fig.~\ref{fig:experiments}, column \#m reports how many calls to constructors
+or methods of the Java library are used in the examples. Our implementation
+determines that they are all white-listed,
+but a few of them require to enforce run-time conditions for being deterministic
+(Sec.~\ref{sec:enforcing}); namely, column \#c reports how many such checks are needed;
+of these, our implementation could statically discharge \#d, at instrumentation time; these needn't
+be checked at run time (Sec.~\ref{subsec:static_vs_dynamic}). The remaining
+$\#c - \#d$ induce the addition of run-time checks in the instrumented code. Consequently,
+when $\#c - \#d > 0$, extra code is instrumented into the jars, as it can be seen by comparing
+columns \emph{without} and \emph{with} in Fig.~\ref{fig:experiments}. These two columns
+show that the extra checks account for a very small increase of the size of the instrumented jars.
+Finally, Fig.~\ref{fig:experiments} reports the time for instrumentation, in milliseconds.
+We tried to compute this time for columns \emph{with} and \emph{without}, but the results
+(reported in the future) were identical. This means that
+checking if method calls are white-listed and possibly adding run-time checks for white-listing
+conditions takes a time infinitesimal in comparison to that of the overall instrumentation
+performed by Takamaka.
+
+We have tried to determine if the extra run-time conditions for the $\#c - \#d$ run-time checks
+make the code slower. For that, we ran 113 JUnit tests on the instrumented code of the jars in Fig.~\ref{fig:experiments}
+(the tests are included in the companion archive). However, the total time for running the
+tests (115 seconds) was the same with or without the addition of the run-time checks, which shows that
+such checks do not actually slow down the execution of the code.

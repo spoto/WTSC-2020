@@ -19,17 +19,21 @@ one of the main reasons behind the success of the Ethereum blockchain.
 Recently, there have been efforts towards the use of traditional
 high-level languages for writing smart contracts.
 A notable example is the Hyperledger Fabric blockchain~\cite{AndroulakiBBCCC18,Vukolic17}, that allows one
-to write smart contracts in Java, among other languages. Citing from~\cite{AndroulakiBBCCC18},
+to write smart contracts in Java, among other languages. Quoting from~\cite{AndroulakiBBCCC18},
 ``blockchain domain-specific languages are difficult to design for the implementer
 and require additional learning by the programmer. Writing smart contracts
 in a general-purpose language (\emph{e.g.}, Go, Java, C/C++) instead
 appears more attractive and accelerates the adoption of blockchain solutions''.
 In particular, Java is a well-known programming language,
 with modern features such as generics, inner classes, lambda
-expressions and lazy streams. Java has
-a large and powerful toolbelt and an active community.
+expressions and lazy streams. For instance, a Solidity contract
+for a Ponzi pyramid scheme is 39 non-blank non-comment lines of code
+(page~155 of~\cite{IyerD18}), while the same contract in Java is made of 19 non-blank
+non-comment lines of code (it can be found in the companion archive
+with experiments, see Sec.~\ref{sec:experiments}).
+Java has a large and powerful toolbelt and an active community.
 Also other blockchains~\cite{aion,aion_example_contract,neo,neo_contract,Spoto19}
-typically allow programmers to write code in a limited subset of Java
+let programmers write code in a limited subset of Java
 and of its support library,
 with extra methods and classes to implement contracts, refer to their
 callers and implement monetary transfers.
@@ -74,11 +78,12 @@ prove that the white-listed sandbox is safe.
 
 Namely, the contributions of this paper are a discussion of the (non-)determinism
 of the Java library methods; a way for specifying deterministic fragments
-of that library; and a technique for
-enforcing some run-time conditions needed for determinism, statically or dynamically.
-We have implemented this technique, that is currently part of the verification
-layer for Java smart contracts of the Takamaka blockchain.
-The deterministic fragment has been specified manually, since there is
+of that library; a technique for
+enforcing some run-time conditions needed for determinism, statically or dynamically;
+an implementation of the technique, that is currently part of the verification
+layer for Java smart contracts of the Takamaka blockchain;
+experiments with that implementation.
+Its deterministic fragment has been specified manually, since there is
 currently no automatic way of proving that a method is deterministic.
 The Takamaka blockchain verifies and then instruments the code of the smart contracts, that gets
 then installed, in instrumented form, in blockchain~\cite{Spoto19}. Later, transactions execute the
@@ -94,9 +99,12 @@ that is, a deterministic subset of the library that can be used for writing smar
 Its definition can use run-time conditions on the way its methods are called.
 Sec.~\ref{sec:enforcing} provides a technique for enforcing such conditions, dynamically
 or statically, through bytecode instrumentation.
+Sec.~\ref{sec:experiments} reports experiments with an implementation of the technique.
 
 This paper is \emph{not} about Java smart contracts themselves. The interested reader
-is referred to the references provided above and, in particular, to ~\cite{Spoto19}.
+is referred to the references provided above and, in particular, to~\cite{Spoto19}
+and the tutorial about Takamaka smart contracts in
+Java\footnote{Available at \url{https://www.takamaka.dev/docs/Takamaka.html}}.
 Hence, this paper does not tackle
 the specific syntax, methods and technology needed for writing smart contracts in Java.
 Examples are presented in an abstract way, unrelated to any specific

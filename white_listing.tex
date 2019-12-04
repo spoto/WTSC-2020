@@ -45,8 +45,10 @@ have always at least a constructor that calls the constructor of \<Object>, poss
 indirectly. Hence, $P$ consists of interfaces only,
 with default and static methods that do not call any library code, and is hence
 deterministic.
-A deterministic white-listed fragment is $\wl_2=\{\<Object()>\}$. It contains
-the constructor of class \<Object> only. This time, it is possible to write programs $P$
+A deterministic white-listed fragment is $\wl_2=\{\<Object()>\}$.
+%It contains
+%the constructor of class \<Object> only.
+This time, one can write programs $P$
 that obey $\wl_2$, with classes that extend \<Object> and whose constructors call \<Object()>.
 But no other library methods nor contructors can be called, which is an irrealistic constraint.
 The white-listed fragment $\wl_3=\{\<Object()>,\<System.currentTimeMillis()>\}$ is not deterministic,
@@ -74,15 +76,14 @@ Let us introduce for instance the following annotations:
 %
 Then one can define
 %
-%\[
-$\wl_5=\{%\begin{array}{c}
-\<Object()>, %\\
-\<@MustRedefineHashCodeOrToString>\linebreak \<Object.toString()>, %\\
-\<HashSet\text{<}E\text{>}()>, %\\
-\<Collection\text{<}E\text{>}.add(@MustRedefineHashCode E e)> %}
-  %\end{array}\right
-  \}$
-%\]
+\[
+\wl_5=\left\{\begin{array}{c}
+\<Object()>,\\
+\<@MustRedefineHashCodeOrToString Object.toString()>,\\
+\<HashSet\text{<}E\text{>}()>,\\
+\<Collection\text{<}E\text{>}.add(@MustRedefineHashCode E e)>
+\end{array}\right\}
+\]
 %
 that constrains \<Object.toString()> to be called on values that redefine
 at least one of \<hashCode()> and \<toString()>, and

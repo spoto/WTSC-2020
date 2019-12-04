@@ -14,13 +14,13 @@ while class \<java.util.Collection> was only introduced with version $1.2$.
 %We report fully-qualified names of classes only the first time they are cited.
 
 Let us discuss the same meaning of \emph{determinism}.
-The \emph{state} of the Java interpreter is typically defined
+The \emph{state} $\sigma$ of the Java interpreter is typically defined
 as a function from variables and object fields into values.
 Then the goal is to guarantee that the execution $\phi$ of a piece of code,
 from the same state $\sigma$ but in two different blockchain nodes, yields the same result, \emph{i.e.},
 same next state $\sigma'$ and same value $r$ (if the code is an expression):
 $\phi(\sigma)=\langle\sigma',r\rangle$ in all nodes of the network.
-This definition, however, is too strict. Consider the constructor of
+This definition, however, is too strict. Consider the constructor
 \<String()> of \<java.lang.String>, that instantiates and returns a new empty \<String>
 object. It is an expression whose execution,
 from any given state $\sigma$ but in two different blockchain nodes,
@@ -40,7 +40,7 @@ brand new empty strings), and is consequently deterministic.
 
 \begin{figure}[t]
   \begin{center}
-    {\scriptsize\begin{tabular}{|l||C{1cm}|C{1.25cm}|C{1.57cm}|C{1cm}|}
+    {\small\begin{tabular}{|l||C{1cm}|C{1.25cm}|C{1.57cm}|C{1cm}|}
       \hline
       \multicolumn{1}{|c||}{\multirow{3}{*}{\textbf{Method}}} & \multicolumn{4}{ c| }{\textbf{Deterministic?}}\\\cline{2-5}
       & \multirow{2}{*}{always} & \multirow{2}{*}{platform} & platform + & \multirow{2}{*}{never} \\
@@ -152,13 +152,12 @@ determinism. % as part of the consensus rules.
 
 %\subsubsection*{Platform-Deterministic Methods under Specific Conditions.}
 Consider method \<Object.hashCode()> of class \<Object> now. It yields an \<int>
-hash of its receiver. Its implementations computes that hash from the
+hash of its receiver. Its implementation computes that hash from the
 RAM pointer value of the object reference.
 Since two blockchain nodes will likely use different RAM pointers,
 this method is non-deterministic.
 In other terms, this method exposes an execution detail (the exact RAM pointer)
-that was meant to be invisible thanks to the notion of state equivalence used
-to define determinism.
+that was meant to be invisible for state equivalence.
 For instance,
 \<int i = new Object().hashCode()>
 will likely assign different values to \<i>
@@ -204,35 +203,35 @@ Hence, such methods are \emph{platform-deterministic under certain conditions}:
 they are deterministic if a given Java library is fixed \emph{and} some run-time conditions hold.
 Sec.~\ref{sec:enforcing} shows how such conditions can be enforced.
 
-Consider methods \<iterator()> and \<stream()> of the generic class
-\<Collection$\text{<}$E$\text{>}$> now. They provide two different ways for
+Consider methods \<iterator()> and \<stream()> of the generic
+\<Collection$\text{<}$E$\text{>}$>. They provide two ways for
 processing the elements, of type $E$, of a collection. The former implements
-the traditional \emph{iterator pattern} and yields an object able to enumerate
-the elements. The latter yields a \emph{stream}, that is,
-an abstract description of a lazy algorithm on the
+the traditional \emph{iterator pattern} and yields an object that enumerates
+the elements. The latter yields a \emph{stream}, \emph{i.e.},
+a lazy algorithm on the
 elements, that can be subsequently programmed and executed.
-Streams implement the map/filter/reduce design pattern. Their specification
-makes heavy use of lamba expressions.
-The interesting point is that neither method
-guarantees any specific enumeration order: the elements will be
-enumerated in any order, in general. There are collections for which they
+Streams implement the map/filter/reduce pattern, making
+heavy use of lamba expressions.
+Interestingly, neither method
+guarantees a fixed enumeration order.
+There are collections for which they
 guarantee an order, such as instances of \<java.util.List$\text{<}$E$\text{>}$>:
 on lists, enumeration proceeds from head to tail;
 or instances of \<java.util.LinkedHashSet$\text{<}$E$\text{>}$>, on which they proceed in
 insertion order.
 For collections such as \<java.util.HashSet$\text{<}$E$\text{>}$>, instead, the order
-varies with the library version \emph{and} with each execution. The reason is that
+varies with the library version \emph{and} at each execution. The reason is that
 \<HashSet> uses a hashmap~\cite{CormenLRS09}
-to store elements with the same \<hashCode()> inside the same bucket.
-Since \<hashCode()>, as shown above, is in general non-deterministic, then
-the distribution of elements inside the buckets varies from run to run and their enumeration
-as well, being implemented as a lexicographic scan of the buckets' elements.
+to store elements with the same \<hashCode()> in the same bucket.
+Since \<hashCode()>, as shown above, is non-deterministic, then
+the distribution of elements in the buckets varies from run to run and their enumeration
+as well, being the lexicographic scan of the buckets' elements.
 One could forbid \<HashSet> and only allow its
 more expensive sibling \<LinkedHashSet>, whose iteration order is fixed.
 But then method \<add()> would still be non-deterministic, since its gas consumption
 is affected by the shape of the buckets, as discussed later.
-Moreover, programmers like \<HashSet>, that is a very frequently class used
-in Java code, and they would be annoyed if it would be
+Moreover, programmers like \<HashSet>, that is much used
+in Java code, and would be annoyed if it were
 banned. It is much better to observe that,
 if the \<hashCode()> of all its elements has been redefined in a deterministic way
 and if a specific library version is fixed, then the behavior of \<HashSet> becomes
@@ -259,8 +258,8 @@ the given \<Spliterator>. If the \<Spliterator> is deterministic,
 the resulting stream is deterministic as well,
 on a given library version, but only if it is sequential.
 Passing true for \<p> would yield a parallel stream instead, that is
-inherently non-deterministic and cannot be allowed in smart contracts.
-Hence, this method can be used but only if a specific library is used and
+inherently non-deterministic.
+Hence, this method can be used only if a specific library is used and
 if it is enforced that false is passed for \<p> at run time (Sec.~\ref{sec:enforcing}).
 
 If only methods of this and of the previous two categories are used, then
@@ -270,8 +269,7 @@ the run-time conditions that entail determinism must be somehow enforced.
 %\subsubsection*{Never Deterministic Methods.}
 Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
 yields the number of milliseconds elapsed since the beginning of 1970.
-Not surprisingly, code using that method will likely get different measures in different
-blockchain nodes.
+Not surprisingly, it will yield different measures in different blockchain nodes.
 Such an inherently non-deterministic method cannot be used in a smart contract.
 Consider method \<parallel()> of \<java.util.stream.BaseStream> now.
 It yields a parallel version of a stream. For instance, if \<list> is a list with

@@ -27,10 +27,10 @@ appears more attractive and accelerates the adoption of blockchain solutions''.
 In particular, Java is a well-known programming language,
 with modern features such as generics, inner classes, lambda
 expressions and lazy streams. For instance, a Solidity contract
-for a Ponzi pyramid scheme consists of 39 non-blank non-comment lines of code
-(page~155 of~\cite{IyerD18}), while its translation in Java of only 19 lines
-(it can be found in the companion archive
-with experiments, see Sec.~\ref{sec:experiments}).
+for a Ponzi pyramid scheme consists of~39 non-blank non-comment lines of code
+(page~155 of~\cite{IyerD18}), while its translation into Java is only 19 lines
+long (it can be found in the companion archive,
+see Sec.~\ref{sec:experiments}).
 Java has a large and powerful toolbelt and an active community.
 Also other blockchains~\cite{aion,aion_example_contract,neo,neo_contract,Spoto19}
 let programmers code in a limited subset of Java.
@@ -45,10 +45,10 @@ in the last decades and its semantics is well-known. There is, however, a big
 issue here. Namely, the support library of Java is non-deterministic, in general.
 For most blockchains, non-determinism leads to a fork of the network, since
 consensus cannot be reached. Hyperledger Fabric allows instead non-determinism,
-in the sense that code executions, if non-deterministic, get rejected~\cite{Vukolic17}.
+in the sense that code execution, if non-deterministic, gets rejected~\cite{Vukolic17}.
 Hence, also in this case, programmers should avoid non-determinism, if they want their code to be run.
 
-Non-determinism is obvious for library classes and methods that support, explicitly,
+Non-determinism is obvious for library classes and methods that perform, explicitly,
 parallel or random computations. But the real problem is that
 also some library parts, that are explicitly sequential, might lead to
 non-deterministic results.
@@ -88,7 +88,7 @@ and must agree on the result. An attacker cannot modify the instrumented program
 or its execution semantics after it has been installed in blockchain.
 
 This work is organized as follows.
-Sec.~\ref{sec:determinism} discusses the (non-)determinism featured by some
+Sec.~\ref{sec:determinism} discusses the (non-)determinism of some
 examples of Java library methods.
 Sec.~\ref{sec:white_listing} defines the notion of \emph{deterministic white-listed fragment} of the Java library.
 %that is, a deterministic subset of the library that can be used for writing smart contracts.

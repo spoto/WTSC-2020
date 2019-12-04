@@ -15,8 +15,7 @@ To make the technique more accessible to the reader, this section presents
 the instrumentation at source-code level, but it actually works at bytecode level.
 
 Assume that a blockchain node verifies that smart contracts obey to the deterministic
-fragment in Figs.~\ref{fig:white_listed_Object_Collection_Set}
-and~\ref{fig:white_listed_List_HashSet_ArrayList}.
+fragment in Fig.~\ref{fig:fragment}.
 Assume that a user installs in blockchain a smart contract whose
 code contains \<collection.remove(element)>, whose static target is
 \<Collection$\text{<}$E$\text{>}$.remove(Object o)>.
@@ -26,10 +25,10 @@ The node spots this syntactically.\footnote{The Java bytecode of the
   or a similar one for a subtype of \<Collection>.}
 The node consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCode> on \<o>
-(Fig.~\ref{fig:white_listed_Object_Collection_Set}). Hence, during installation of the
+(Fig.~\ref{fig:fragment}). Hence, during installation of the
 smart contract, the node instruments its code by adding a brand new method:
 
-{\scriptsize\begin{verbatim}
+{\small\begin{verbatim}
 private static boolean verifier_0(Collection<E> receiver, Object par_0) {
   Support.mustRedefineHashCode(par_0);
   return receiver.remove(par_0);
@@ -41,7 +40,7 @@ and replaces \<collection.remove(element)> with \<verifier\_0(collection, elemen
 Each time that code will later be executed,
 \<Support.mustRedefineHashCode(par\_0)> will check (through Java reflection)
 that the actual argument
-passed to \<remove(Object o)> redefines \<hashCode()> and aborts
+to \<remove(Object o)> redefines \<hashCode()> and aborts
 the current transaction otherwise. The node includes a
 \<Support> class for that, whose
 code is not reported for space limitations.
@@ -76,10 +75,10 @@ For another example, assume that the smart contract calls
 The blockchain node spots this syntactically,
 consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCodeOrToString> on
-\<x> (Fig.~\ref{fig:white_listed_Object_Collection_Set}).
-Consequently, it instruments the code of the smart contract by adding:
+\<x> (Fig.~\ref{fig:fragment}).
+Consequently, it replaces \<x.toString()> with \<verifier\_1(x)> and adds:
 
-{\scriptsize\begin{verbatim}
+{\small\begin{verbatim}
 private static verifier_1(Object receiver) {
   Support.mustRedefineHashCodeOrToString(receiver);
   return receiver.toString();
@@ -87,9 +86,8 @@ private static verifier_1(Object receiver) {
 \end{verbatim}}
 
 \noindent
-The node replaces \<x.toString()> with \<verifier\_1(x)>.
-Later, at each run of the contract,
-\<Support.mustRedefineHashCodeOrToString(receiver)> will be executed,
+At each run of the contract,
+\<Support.mustRedefineHashCodeOrToString(receiver)> will be executed later,
 that checks the condition by reflection.
 
 Assume that the smart contract contains a static call
@@ -98,9 +96,9 @@ Assume that the smart contract contains a static call
 and that the white-listed fragment of the blockchain node allows that signature,
 but has a run-time condition on \<p> that avoids the creation of parallel streams:
 \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, @MustBeFalse boolean p)>.
-The node instruments the smart contract by adding:
+The node replaces \<StreamSupport.stream(s, p)> with \<verifier\_2(s, p)> and adds:
 
-{\scriptsize\begin{verbatim}
+{\small\begin{verbatim}
 private static Stream<T> verifier_2(Spliterator<T> par_0, boolean par_1) {
   Support.mustBeFalse(par_1);
   return StreamSupport.stream(par_0, par_1);
@@ -108,9 +106,8 @@ private static Stream<T> verifier_2(Spliterator<T> par_0, boolean par_1) {
 \end{verbatim}}
 
 \noindent
-Then it replaces \<StreamSupport.stream(s, p)> with \<verifier\_2(s, p)>.
 Method \<Support.mustBeFalse(value)> is defined in class \<Support> and
-will abort future transactions if \<value> holds false.
+aborts future transactions when \<value> is false.
 
 %{\small\begin{verbatim}
 %public static void mustBeFalse(boolean value) {
@@ -142,8 +139,8 @@ static analysis provides a definite answer
 only in some cases. Hence, a blockchain node can use static analysis to discharge
 the proof-obligations due to run-time conditions on white-listed methods. If it
 succeeds with a definite answer, stating that a given condition definitely holds,
-the blockchain node needn't generate any \<verifier> method for that condition. Otherwise, it
-generates the \<verifier> method, as last resort.
+the node needn't generate any \<verifier> method for that condition. Otherwise, it
+adds the \<verifier>, as last resort.
 
 Static analysis can be more or less aggressive.
 More aggressive static analyses discharge more proof-obligations statically,

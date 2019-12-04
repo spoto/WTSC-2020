@@ -1,6 +1,6 @@
 \section{Experiments}\label{sec:experiments}
 
-Namely, we have implemented the technique of Sec.~\ref{sec:enforcing}
+We have implemented the technique of Sec.~\ref{sec:enforcing}
 at bytecode level, by using the BCEL
 library for bytecode manipulation~\cite{bcel}.
 Experiments have been performed on
@@ -15,7 +15,7 @@ checks; and (4) the same jars, instrumented with the addition of such checks.
 
 \begin{figure}[t]
   \begin{center}
-{\scriptsize\begin{tabular}{|l||r|r|r||r|r||r|}
+{\small\begin{tabular}{|l||r|r|r||r|r||r|}
   \hline
   archive of smart contracts & \#m & \#c & \#d & without & with & instr.\ time \\\hline\hline
   \<auctions.jar> & 20 & 0 & 0 & 11997 & 11997 & 4 \\\hline
@@ -32,9 +32,9 @@ checks; and (4) the same jars, instrumented with the addition of such checks.
   \<voting.jar> & 8 & 1 & 0 & 7210 & 7305 & 20 \\\hline
 \end{tabular}}
   \end{center}
-  \caption{The jars of smart contracts used for the experiments. Each jar
+  \caption{The jars used for the experiments. Each
     contains one or more contracts. For each jar, \#m is the number
-    of calls to constructors or methods of the Java library;
+    of calls to signatures of the Java library;
     \#c is the number of white-listing conditions that must be checked
     for those calls; \#d is the subset of \#c that has been discharged
     statically, at instrumentation time; \emph{without} is the size
@@ -45,9 +45,9 @@ checks; and (4) the same jars, instrumented with the addition of such checks.
   \label{fig:experiments}
   \end{figure}
 
-Fig.~\ref{fig:experiments} reports the jar archives used for the experiments.
-They contain smart contracts for auctions (\<auctions.jar>), for the definition
-of objects in blockchain (\<basicdependencies.jar>), for the use of such objects
+Fig.~\ref{fig:experiments} reports the Java archives (jars) used for the experiments.
+They contain contracts for auctions (\<auctions.jar>), for storage of
+objects in blockchain (\<basicdependencies.jar>), for the use of such objects
 as a library (\<basic.jar>), a library of collection classes explicitly developed
 for Takamaka (\<collections.jar>), contracts for crowdfunding (\<crowdfunding.jar>),
 the same run-time support library of Takamaka (\<io-takamaka-code.jar>),
@@ -58,10 +58,12 @@ game contract (\<tictactoe.jar>) and contracts for electronic voting (\<voting.j
 
 Column \#m of Fig.~\ref{fig:experiments} reports how many calls to constructors
 or methods of the Java library occur in the code. Our implementation
-verified that they are all white-listed,
-but a few of them require to enforce run-time conditions for determinism
+uses an extension of the fragment in Fig.~\ref{fig:fragment} (included in the
+companion archive) and verified that all those calls are white-listed.
+However, a few of them require to enforce run-time conditions for determinism
 (Sec.~\ref{sec:enforcing}); namely, column \#c counts such conditions;
-of these, our implementation could statically discharge \#d, at instrumentation time; these needn't
+of these, our implementation could statically discharge \#d, at instrumentation time,
+through static analysis; these needn't
 be checked at run time (Sec.~\ref{subsec:static_vs_dynamic}). The remaining
 $\#c - \#d$ require the addition of run-time checks in the instrumented jar. Consequently,
 when $\#c - \#d > 0$, extra code is instrumented into the jars, as it can be seen by comparing
@@ -72,9 +74,10 @@ We computed it for columns \emph{with} and \emph{without}, but the results
 (reported in the figure) were identical. This means that the time for
 checking if method calls are white-listed and for adding run-time checks for white-listing
 conditions is very small.
-In order to investigate if the extra run-time checks for the $\#c - \#d$ run-time conditions
+In order to investigate if the extra run-time checks for the $\#c - \#d$ conditions
 slow down the code, we have run 113 JUnit tests, that trigger blockchain transactions
 that execute the instrumented code of the jars in Fig.~\ref{fig:experiments}
 (these tests are in the companion archive). The total time for running the
-tests (115 seconds) was the same with and without the addition of the run-time checks, which shows that
+tests (115 seconds) was the same both with and without
+the addition of the run-time checks, which shows that
 these do not actually slow down the execution.

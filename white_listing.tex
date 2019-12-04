@@ -78,10 +78,10 @@ Then one can define
 %
 \[
 \wl_5=\left\{\begin{array}{c}
-\<Object()>,\\
-\<@MustRedefineHashCodeOrToString Object.toString()>,\\
-\<HashSet\text{<}E\text{>}()>,\\
-\<Collection\text{<}E\text{>}.add(@MustRedefineHashCode E e)>
+\mbox{\<Object()>},\\
+\mbox{\<@MustRedefineHashCodeOrToString Object.toString()>},\\
+\mbox{\<HashSet$\text{<}$E$\text{>}$()>},\\
+\mbox{\<Collection$\text{<}$E$\text{>}$.add(@MustRedefineHashCode E e)>}
 \end{array}\right\}
 \]
 %
@@ -93,7 +93,7 @@ for any given Java library version, thanks
 to such constraints. For instance, the following code is deterministic
 on any Java library:
 
-{\scriptsize\begin{verbatim}
+{\small\begin{verbatim}
 Set<Object> set = new HashSet<>();
 set.add("hello"); set.add(BigInteger.ONE); set.add(new HashSet<String>());
 String s = set.toString();
@@ -101,12 +101,13 @@ String s = set.toString();
 
 \noindent
 It creates a hashset and populates it with a
-\<String>, a \<java.math.BigInteger> and an empty \<HashSet>. All these three
-classes redefine method \<hashCode()>, hence the constraint on \<add()> holds.
-At the end, the code calls \<toString()> on the hashset.
-The class \<HashSet> of \<set> redefines \<toString()>, hence the constraint
+\<String>, a \<java.math.BigInteger> and an empty \<HashSet>. These
+redefine \<hashCode()>, hence the constraint on \<add()> holds.
+At the end, it calls \<toString()> on the
+\<set>, that is a \<HashSet> that redefines \<toString()>,
+hence the constraint
 on \<toString()> holds. By using, for instance, the
-OpenJDK~8 library, variable \<s> will always hold the string
+OpenJDK~13 library, variable \<s> will always hold the string
 \<"[[], 1, hello]">. Other versions of the library might compute different strings but,
 once a library version is fixed, always the same string is computed.
 The reason of this determinism is that the shape of the buckets of the hashset is fixed
@@ -145,7 +146,7 @@ which helps spotting typos. Finally, a blockchain node can query such classes by
 which is both simple and efficient, compared for instance to querying textual or XML
 specifications.
 
-\begin{figure}[t]
+\begin{figure}
 {\scriptsize\begin{verbatim}
 public abstract class whitelisted.java.lang.Object {
   public Object() {}
@@ -179,13 +180,7 @@ public interface whitelisted.java.util.Set<E> {
   boolean retainAll(java.util.Collection<?> c);
   boolean removeAll(java.util.Collection<?> c);
 }
-\end{verbatim}}
-\caption{A specification of the white-listed methods of \<Object>, \<Collection> and \<Set>.}
-\label{fig:white_listed_Object_Collection_Set}
-\end{figure}
 
-\begin{figure}[t]
-{\scriptsize\begin{verbatim}
 public interface whitelisted.java.util.List<E> {
   E get(int index);
   E remove(int index);
@@ -202,7 +197,7 @@ public interface whitelisted.java.util.List<E> {
   java.util.Spliterator<E> spliterator();
 }
 
-public class whitelisted.java.util.HashSet<E> {
+public abstract class whitelisted.java.util.HashSet<E> {
   public HashSet() {}
   public HashSet(java.util.Collection<? extends E> c) {}
   public HashSet(int initialCapacity, float loadFactor) {}
@@ -217,15 +212,15 @@ public abstract class whitelisted.java.util.ArrayList<E> {
   public abstract void ensureCapacity(int minCapacity);
 }
 \end{verbatim}}
-\caption{A specification of the white-listed methods of \<List>, \<HashSet> and \<ArrayList>.}
-\label{fig:white_listed_List_HashSet_ArrayList}
+  \caption{White-listed methods of \<Object>,
+    \<Collection>, \<Set>, \<List>, \<HashSet> and \<ArrayList>.}
+\label{fig:fragment}
 \end{figure}
 
-For instance, Figs.~\ref{fig:white_listed_Object_Collection_Set}
-and~\ref{fig:white_listed_List_HashSet_ArrayList}
-specify a white-listed fragment of \<Object>,
+For instance, Fig.~\ref{fig:fragment}
+specifies a white-listed fragment of \<Object>,
 \<Collection>, \<Set>, \<List>, \<HashSet> and
-\<ArrayList>\footnote{These method and constructor signatures are copy and paste from the
+\<ArrayList>\footnote{These signatures are copy and paste from the
 library source code. For the use of generics, wildcards and
 \<Object> in these signatures, we refer to~\cite{NaftalinW06}.}.
 It is deterministic for a given fixed version of the Java library:
@@ -236,12 +231,12 @@ deterministic. The latter can be called on collections since they redefine it,
 hence satisfying the constraint for \<Object>.
 
 It is interesting to observe that method
-\<contains(Object o)> in \<Collection> (Fig.~\ref{fig:white_listed_Object_Collection_Set})
+\<contains(Object o)> in \<Collection> (Fig.~\ref{fig:fragment})
 requires \<o> to redefine \<hashCode()>
 or otherwise, for hashsets, the bucket where \<o> is looked for might be different
 for different runs, with subsequent non-determinism.
 That constraint has been lifted for \<contains(Object o)> in \<List>
-(Fig.~\ref{fig:white_listed_List_HashSet_ArrayList}), since its implementation, for lists,
+(Fig.~\ref{fig:fragment}), since its implementation, for lists,
 scans the list from head to tail,
 looking for an \<equals()> element, with deterministic behavior,
 regardless of \<o> having redefined \<hashCode()> or not. This is an application
@@ -252,21 +247,20 @@ but not strengthened. The same for \<remove(Object o)>, passing from
 
 There is no single largest deterministic fragment
 for a given set of classes and interfaces. For instance, 
-there is another deterministic fragment for the same classes considered in
-Figs.~\ref{fig:white_listed_Object_Collection_Set}
-and~\ref{fig:white_listed_List_HashSet_ArrayList}, identical
-to those figures but allowing any elements in lists, possibly not redefining
+another deterministic fragment for the same classes in
+Fig.~\ref{fig:fragment} is identical
+but for allowing any elements in lists, possibly not redefining
 \<hashCode()> (hence more permissive);
 forbidding \<Object.toString()> and \<Object.hashCode()> altogether,
 since it would now be non-deterministic on lists (hence
-more restrictive); and forbidding the conversion constructor
+more restrictive); and forbidding the constructor
 \<HashSet(Collection$\text{<}$? extends E$\text{>}$ c)>
-(Fig.~\ref{fig:white_listed_List_HashSet_ArrayList}), that would allow a hashset to be
+(Fig.~\ref{fig:fragment}), that allows a hashset to be
 built from a list and hence contain elements whose \<hashCode()> has not been redefined,
-with consequent non-determinism (hence more restrictive). The choice between alternative
-deterministic fragments is often a question of personal taste.
-One should choose the one that allows more methods of frequent use. In this example,
-forbidding \<Object.toString()> and \<Object.hashCode()> would hardly be acceptable in practice.
+with consequent non-determinism (hence more restrictive). Choosing a specific
+deterministic fragment is often a question of personal taste.
+One should choose that allowing more methods of frequent use. In this example,
+forbidding \<Object.toString()> and \<Object.hashCode()> would hardly be acceptable.
 %In principle, blockchain nodes could know about more deterministic fragments and check
 %if a smart contract obeys at least one of them, hence allowing more code.
 %In practice, the complexity of dealing with more fragments might not justify the effort.

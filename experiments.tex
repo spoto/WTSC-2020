@@ -5,13 +5,13 @@ at bytecode level, by using the BCEL
 library for bytecode manipulation~\cite{bcel}.
 Experiments have been performed on
 an Intel 4-Core i3-4150 at $3.50$GHz with 16GB of RAM, running Linux Ubuntu 18.04.
-A companion archive, provided with this paper\footnote{We have submitted the archive
-along this paper and expect that it has been made available to the anonymous reviewers.},
-contains (1) the fragment of white-listed library methods
-used in these experiments; (2) the source code of the contracts
-contained in the jars in Fig.~\ref{fig:experiments};
-(3) the same jars, instrumented without the addition of the run-time white-listing
-checks; and (4) the same jars, instrumented with the addition of such checks.
+%A companion archive, provided with this paper\footnote{We have submitted the archive
+%along this paper and expect that it has been made available to the anonymous reviewers.},
+%contains (1) the fragment of white-listed library methods
+%used in these experiments; (2) the source code of the contracts
+%contained in the jars in Fig.~\ref{fig:experiments};
+%(3) the same jars, instrumented without the addition of the run-time white-listing
+%checks; and (4) the same jars, instrumented with the addition of such checks.
 
 \begin{figure}[t]
   \begin{center}
@@ -58,13 +58,15 @@ game contract (\<tictactoe.jar>) and contracts for electronic voting (\<voting.j
 
 Column \#m of Fig.~\ref{fig:experiments} reports how many calls to constructors
 or methods of the Java library occur in the code. Our implementation
-uses an extension of the fragment in Fig.~\ref{fig:fragment} (included in the
-companion archive) and verified that all those calls are white-listed.
+uses an extension of the fragment in Fig.~\ref{fig:fragment}
+%(included in the companion archive)
+and verified that all those calls are white-listed.
 However, a few of them require to enforce run-time conditions for determinism
 (Sec.~\ref{sec:enforcing}); namely, column \#c counts such conditions;
 of these, our implementation could statically discharge \#d, at instrumentation time,
-through static analysis; these needn't
-be checked at run time (Sec.~\ref{subsec:static_vs_dynamic}). The remaining
+through static analysis; that is, these needn't
+be checked at run time, since these checks are eliminated by the simple
+static analysis of Sec.~\ref{subsec:static_vs_dynamic}. The remaining
 $\#c - \#d$ require the addition of run-time checks in the instrumented jar. Consequently,
 when $\#c - \#d > 0$, extra code is instrumented into the jars, as it can be seen by comparing
 columns \emph{without} and \emph{with} in Fig.~\ref{fig:experiments}. These
@@ -80,4 +82,6 @@ that execute the instrumented code of the jars in Fig.~\ref{fig:experiments}
 (these tests are in the companion archive). The total time for running the
 tests (115 seconds) was the same both with and without
 the addition of the run-time checks, which shows that
-these do not actually slow down the execution.
+these do not actually slow down the execution. Note that the code without run-time checks
+is still instrumentated for running on a blockchain. We cannot compare with fully uninstrumented code
+since it cannot be run~\cite{Spoto19}.

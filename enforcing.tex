@@ -26,17 +26,18 @@ The node spots this syntactically.\footnote{The Java bytecode of the
 The node consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCode> on \<o>
 (Fig.~\ref{fig:fragment}). Hence, during installation of the
-smart contract, the node instruments its code by adding a brand new method:
+smart contract, the node instruments its code by adding a brand new
+verification method:
 
 {\small\begin{verbatim}
-private static boolean verifier_0(Collection<E> receiver, Object par_0) {
+private static boolean remove_0(Collection<E> receiver, Object par_0) {
   Support.mustRedefineHashCode(par_0);
   return receiver.remove(par_0);
 }
 \end{verbatim}}
 
 \noindent
-and replaces \<collection.remove(element)> with \<verifier\_0(collection, element)>.
+and replaces \<collection.remove(element)> with \<remove\_0(collection, element)>.
 Each time that code will later be executed,
 \<Support.mustRedefineHashCode(par\_0)> will check (through Java reflection)
 that the actual argument
@@ -76,10 +77,11 @@ The blockchain node spots this syntactically,
 consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCodeOrToString> on
 \<x> (Fig.~\ref{fig:fragment}).
-Consequently, it replaces \<x.toString()> with \<verifier\_1(x)> and adds:
+Consequently, it replaces \<x.toString()> with \<toString\_0(x)> and adds
+the verification method:
 
 {\small\begin{verbatim}
-private static verifier_1(Object receiver) {
+private static toString_0(Object receiver) {
   Support.mustRedefineHashCodeOrToString(receiver);
   return receiver.toString();
 }
@@ -96,18 +98,18 @@ Assume that the smart contract contains a static call
 and that the white-listed fragment of the blockchain node allows that signature,
 but has a run-time condition on \<p> that avoids the creation of parallel streams:
 \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, @MustBeFalse boolean p)>.
-The node replaces \<StreamSupport.stream(s, p)> with \<verifier\_2(s, p)> and adds:
+The node replaces \<StreamSupport.stream(s, p)> with \<stream\_0(s, p)> and adds
+the verification method:
 
 {\small\begin{verbatim}
-private static Stream<T> verifier_2(Spliterator<T> par_0, boolean par_1) {
+private static Stream<T> stream_0(Spliterator<T> par_0, boolean par_1) {
   Support.mustBeFalse(par_1);
   return StreamSupport.stream(par_0, par_1);
 }
 \end{verbatim}}
 
 \noindent
-Method \<Support.mustBeFalse(value)> is defined in class \<Support> and
-aborts future transactions when \<value> is false.
+\<Support.mustBeFalse(value)> aborts the current transaction when \<value> is false.
 
 %{\small\begin{verbatim}
 %public static void mustBeFalse(boolean value) {
@@ -139,8 +141,8 @@ static analysis provides a definite answer
 only in some cases. Hence, a blockchain node can use static analysis to discharge
 the proof-obligations due to run-time conditions on white-listed methods. If it
 succeeds with a definite answer, stating that a given condition definitely holds,
-the node needn't generate any \<verifier> method for that condition. Otherwise, it
-adds the \<verifier>, as last resort.
+the node needn't generate any verification method for that condition. Otherwise, it
+adds the verification method, as last resort.
 
 Static analysis can be more or less aggressive.
 More aggressive static analyses discharge more proof-obligations statically,
@@ -157,9 +159,9 @@ $\tau$ of \<v> is a class that redefines \<Object.hashCode()> or \<Object.toStri
 the same must hold for the dynamic type $\tau'$ of \<v>, that can only be an
 instance of $\tau$. Hence the run-time condition must hold, always.
 This follows from the fact that Java and Java bytecode
-are strongly-typed. Otherwise, the \<verifier> method is added for that condition.
+are strongly-typed. Otherwise, the verification method is added for that condition.
 For \<@MustBeFalse>, our implementation looks, intra-procedurally, for
 the producers of the annotated value.
 If these are always the literal \<false>, then the condition holds.
 If, instead, at least one producer is the literal \<true> or a complex expression,
-then the static analysis gives up and the \<verifier> method is added.
+then the static analysis gives up and the verification method is added.

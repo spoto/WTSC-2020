@@ -29,11 +29,13 @@ with modern features such as generics, inner classes, lambda
 expressions and lazy streams. For instance, a Solidity contract
 for a Ponzi pyramid scheme consists of~39 non-blank non-comment lines of code
 (page~155 of~\cite{IyerD18}), while its translation into Java is only 19 lines
-long (it can be found in the companion archive,
-see Sec.~\ref{sec:experiments}).
+long. % (it can be found in the companion archive,
+%see Sec.~\ref{sec:experiments}).
 Java has a large and powerful toolbelt and an active community.
 Also other blockchains~\cite{aion,aion_example_contract,neo,neo_contract,Spoto19}
 let programmers code in a limited subset of Java.
+It is true that Solidity has native features for smart contracts, such as
+\<payable> functions, but the same can be obtained in Java through instrumentation~\cite{Spoto19}.
 
 One of the most compelling reasons for writing smart contracts
 in a mainstream language such as Java is that it comes with a large
@@ -47,6 +49,8 @@ For most blockchains, non-determinism leads to a fork of the network, since
 consensus cannot be reached. Hyperledger Fabric allows instead non-determinism,
 in the sense that code execution, if non-deterministic, gets rejected~\cite{Vukolic17}.
 Hence, also in this case, programmers should avoid non-determinism, if they want their code to be run.
+Non-determinism can be allowed in smart contracts for the generation of random numbers~\cite{ChatterjeeGP19}, but that
+technique does not apply to other forms of non-determinism.
 
 Non-determinism is obvious for library classes and methods that perform, explicitly,
 parallel or random computations. But the real problem is that
@@ -68,7 +72,9 @@ Finally, one should be sure to have fixed \emph{all} possible sources of non-det
 Instead, this paper advocates the use of a standard, fixed Java library, restricted to a white-listed
 fragment and with the addition of a verification layer that enforces some run-time conditions.
 It must be ensured that this fragment is deterministic, which is typically small (but still
-large if compared to, say, Solidity, that has \emph{no} support library). One needn't prove
+large if compared to, say, Solidity, that has \emph{no} native support library and only very
+rudimentary third-party libraries; in particular, Solidity's \<library> keyword
+only allows one to define stateless libraries). One needn't prove
 to have caught every single potential case of non-determinism in the library, but only that
 the white-listed sandbox is safe.
 
@@ -86,6 +92,9 @@ then installed, in instrumented form, in blockchain~\cite{Spoto19}. Later, trans
 instrumented code, never the original one. All nodes perform verification and instrumentation
 and must agree on the result. An attacker cannot modify the instrumented program
 or its execution semantics after it has been installed in blockchain.
+The motivation of the original instrumentation goes beyond the issue on determinism;
+we refer to~\cite{Spoto19} for its description, while this paper describes its use for enforcing
+determinism only.
 
 This work is organized as follows.
 Sec.~\ref{sec:determinism} discusses the (non-)determinism of some

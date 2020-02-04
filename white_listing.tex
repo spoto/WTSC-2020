@@ -20,7 +20,8 @@ or otherwise aborts their execution in blockchain.
   A program $P$ \emph{obeys} a white-listed fragment $\wl$ if and only if
   \begin{enumerate}
     \item every method call
-      in $P$ has a static target that is either in $\wl$ or overrides a signature in $\wl$
+      in $P$ has a static target that is either in contract code, or
+      in $\wl$ or overrides a signature in $\wl$
       (syntactical check); and
     \item in every execution of $P$, the run-time conditions in $\wl$ hold (semantical check).
   \end{enumerate}
@@ -241,7 +242,8 @@ scans the list from head to tail,
 looking for an \<equals()> element, with deterministic behavior,
 regardless of \<o> having redefined \<hashCode()> or not. This is an application
 of the Liskov substitution principle~\cite{LiskovW94}:
-white-listing constraints can be weakened in subclasses,
+remember that that principle, for formal arguments, works by generalization:
+hence white-listing constraints on formal arguments can be weakened in subclasses,
 but not strengthened. The same for \<remove(Object o)>, passing from
 \<Collection> to \<List>.
 

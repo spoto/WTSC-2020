@@ -1,0 +1,151 @@
+
+WTSC20 wtsc20@easychair.org via univr.it 
+Tue, Jan 7, 3:10 AM
+to Fausto
+
+Dear Fausto,
+
+We are happy to inform you that your paper Enforcing Determinism of Java Smart Contracts has been accepted for publication at WTSC@FC20 - subject to registration of one of the authors at the workshop. We received this year about 30 submissions, following an increasing trend.
+
+IMPORTANT - Things to note:
+
+- Authors are expected to TAKE INTO DUE CONSIDERATION reviewers' comments when preparing their camera ready (the deadline for the camera ready version of workshop's papers is still to be announced by FC20 organisers).
+
+- One, general or academic, workshop registration is required for each accepted paper before the conference. Registration information is available at:
+
+https://fc20.ifca.ai/registration.html
+
+Please register as soon as possible and do not not hesitate to contact us in case of any issue (note early/reg/late deadlines).
+
+- Information on discounted airfares is available: https://fc20.ifca.ai/travel.html (but you may check your vendors as well).
+
+
+Looking forward to seeing you at WTSC!
+
+With best wishes,
+Andrea and Massimiliano
+
+
+SUBMISSION: 3
+TITLE: Enforcing Determinism of Java Smart Contracts
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 3
+TITLE: Enforcing Determinism of Java Smart Contracts
+AUTHORS: Fausto Spoto
+
+----------- Overall evaluation -----------
+SCORE: 1 (weak accept)
+----- TEXT:
+SUMMARY
+
+A key property of the code is smart contracts is that it must be *deterministic*, presenting identical behaviour no matter when or where it is executed. To use Java in a smart contract, it must be restricted to library functions that are deterministic. This involves both which methods are used and conditions on their invocation (e.g., a passed class must be one where the hash function has been redefined to be deterministic, rather than to depend upon the address at which an object has been allocated). The paper describes a simple whitelisting technique, including a way to instrument code to insure conditions are met at runtime. Data is given for a dozen small benchmarks, indicating that the overhead of the runtime instrumentation for whitelisting is not large. The paper makes a useful, if not deep, contribution and is easy to follow.
+
+The biggest problem with the paper is that the author is not a native speaker of english. Also, at times the phrasing is more informal than one would expect in an academic paper (“programmers do not like”). The author should recruit an academic fluent in english to help him improve his language.
+
+My main technical concern is that the benchmarks compare “instrumented code” to code additionally instrumented to support whitelisting. The paper does not explain the purpose of the original instrumentation. This is an important question, because the paper compares the slowdown of white-listing checks to code that is already instrumented, so it is important to know whether or not this instrumentation is necessary. If it is not necessary, then the whitelisting overhead may be more significant.
+
+The paper should also give data on how many runtime checks are eliminated by the simple static analysis that is used.
+
+DETAILED COMMENTS FOR THE AUTHOR
+
+Determinism in Java
+
+p2. “the Takamaka blockchain” You should say something about the status of this blockchain. Is it proposed? Under development? In use? From remarks later, my guess is that it is under development but not yet in use.
+
+p3. “the same meaning of determinism” —> “the meaning of determinism”
+
+p4. “C.m(types)” You need to explain that by “types” you mean the list of types of the corresponding formal parameters. I was completely confused on the first reading. It only made sense once I saw the example “Integer.valueOf(int i)” on p5.
+
+p4. “C.m(types)” What about classes or methods that take type parameters? Corresponding to a call o.m<types2>(pars) you should have C<types1>.m<types2>(types3) where o has type C<types1> and pars have types types3.
+
+p4. “that is selected by looking up” the discussion here is too vague. I have no idea what “types” is supposed to be (see above). Clarify and a source for “static target”, a name I have not encountered before.
+
+p6. “programmers like HashSet, that is much used in Java code” How do you know what programmers like? Better to make an objective statement: “HashSet is widely used in Java code”. Better still if you can give numbers (“in <some sample of Java programs> <some percent> of the programs use HashSet”).
+
+p7. “int positive = ...” put this code fragment in a display.
+
+p7. “every method call in P has a static target that is either in WL or overrides a signature in WL (syntactical check)” That would outlaw invoking any methods defined in the program itself, as opposed to just outlawing calls of library methods that are not on the whitelist. Rephrase to be more precise. Also, mention constructors and method calls separately, since they have a distinct syntactic form in all your following examples.
+
+p8. “Def 2 constrains only the library API allowed in P” But that is not what it says; see above.
+
+p9. “use Java annotations” Give a citation for Java annotations.
+
+p9. BigInteger example. It is crucial here not only that BigInteger redefines hash code, but that the code that redefines hash code is itself deterministic. How is determinism of overrides in library code enforced?
+
+p11. “This is an application of the Liskov substitution principle” I don’t see how. That principle requires subclasses satisfy all constraints of superclasses, and you are doing the opposite. Explain the claim or remove it.
+
+p12. Choosing the name “verifier_0” for the routine that replaces method “remove” impairs readability, e.g., for debugging. Why not choose a name like “remove_0” instead?
+
+p12 “is defined in class Support” move this phrase to the first use of a method in class Support, not the last!
+
+p12 “aborts future transactions” —> “aborts the currently running transaction”
+
+p13 “(3) the same jars, instrumented without the addition of the run-time white-listing checks” I’m confused. If not for white-listing, what instrumentation has been added??? This is actually an important question, because you compare the slowdown of white-listing checks to code that is already instrumented, so it is important to know whether or not this instrumentation is necessary. If it is not necessary, then the whitelisting overhead may be more significant.
+
+p14, Fig 3. It would also be good to give the number of source lines in each smart contract, or some other indicator of its size. Also, it would be good to give data on how may runtime checks are eliminated by your simple static analysis.
+
+p14. “total time for running the tests (115 seconds) was the same” This shows that the extra time is no more than 1%. But you could get a more accurate figure, down to a tenth or hundredth of a percent, and you could also do so for each of the twelve smart contracts separately.
+----------- Best Paper? -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 2 ---------------------
+SUBMISSION: 3
+TITLE: Enforcing Determinism of Java Smart Contracts
+AUTHORS: Fausto Spoto
+
+----------- Overall evaluation -----------
+SCORE: 2 (accept)
+----- TEXT:
+The paper discusses the non-determinism of the Java programming language. This feature, in principle, does not permit to write Smart Contracts using Java in the Blockchain. Indeed, all operations on the Blockchain should be deterministic: this means that the same operation should return the same result when performed across different nodes.
+The Author proposes a solution and an example to write Smart Contracts by using Java.
+
+The paper is well written and the research is motivated by the fact that Java has a larger community when compared to Solidity community. Also, it allows to write Smart Contracts in fewer lines of code when compared to Solidity, accelerating the adoption of blockchain solutions. Moreover, the paper paves the way to enlarge the list of Java library methods that can be used to write Smart Contracts. For the reasons provided above, I recommend that the paper is accepted.
+
+The paper could be better argued by considering the following counterarguments:
+
+First, the Author claims that Java is a better programming language when compared to Solidity, as the latter is less developed. This might be the case, but it should be also noted that Solidity is less developed because it is a new language that might simply need time to be better developed, and to acquire a larger community and a more robust “historical background”.
+
+Second, the Author might also acknowledge that Solidity was born as a programming language specifically oriented to Blockchain, and therefore a major advantage of Solidity could be precisely the fact that it is designed for Blockchain and therefore highly specific for this use.
+
+Third, and more importantly, the Author takes for granted the dichotomy determinism vs. non-determinism, which is fine, but s/he might consider a wider spectrum of possibilities, including other options as for instance casual or bonded processing. Blockchain might indeed be used for aims that require these types of processing (see for instance the case of Probabilistic Smart Contracts, Chatterjee et al. 2019). In such cases, other functions of Java - excluded by the Author in this paper as non-deterministic - might turn out to be crucial.
+
+Here below some minor suggestions:
+
+1) In the introduction, the Author writes: “This paper advocates the use of a standard, fixed Java library, restricted to a white-listed fragment and with the addition of a verification layer that enforces some run-time conditions. It must be ensured that this fragment is deterministic, which is typically small (but still large if compared to, say, Solidity, that has no support library).” This was true in the past, but the Author might consider that nowadays there are several libraries for Solidity, as for instance OpenZeppelin Contracts.
+2) It would have been interesting to read - in the conclusion - the directions for future research, or at least how the Author aims to enlarge the white-listed fragment. This might anyway be further discussed when presenting the paper at the workshop.
+----------- Best Paper? -----------
+SELECTION: no
+
+
+
+----------------------- REVIEW 3 ---------------------
+SUBMISSION: 3
+TITLE: Enforcing Determinism of Java Smart Contracts
+AUTHORS: Fausto Spoto
+
+----------- Overall evaluation -----------
+SCORE: -1 (weak reject)
+----- TEXT:
+This paper discuss how to enforce determinism in java programs, in order to have the same state after execution of code by every miner.
+
+More precisely, it is the Java library which is brought under consideration, and the cause of non determinism for various methods is discussed. Some variants for determinism are discussed in Fig.1: always, platform, platform+conditions, never.
+
+Essentially, the authors identify two cause for non determinism: hash codes, and conversion to strings. Indeed, the basic hash code of a basic java object is computed from its memory pointer, which is execution dependent. When the hash code is computed from the actual data stored in the object, then it is uniquely determined and determinism follows. The same thing happens for conversion to strings.
+
+Then the notion of white-listing fragments is introduced, and to use run-time conditions for determinism, Java annotations are used. In the paper, only three annotations are used "@MustRedefineHashCode", "@MustRedefineHashCodeOrToString", "@MustBeFalse", that restrict the values constraints to get determinism for any Java library, using run time conditions.
+
+To check or enforce these run time conditions, it is proposed to perform code instrumentation. When a smart contract is installed on a node, the node checks syntactically fragments of code that are white listed with run time conditions, and new methods are added, to replace hazardous calls with these new methods. Optimization of this technique using static analysis is discussed in Section 4.1.
+
+Experiments are proposed which indicates a small performance penalty caused by these methods.
+
+The paper is well written, the examples are informative, and one can easily follow the logic of the paper and of the proposed methods for determinism.
+
+The referee is not sure about the novelty of these methods, and of the value of the contribution, which may be is easy. Also the referee is not sure that the causes for non determinism are the only ones proposed (Hash, Conversion to String, Boolean false for iterators). So the mark lends towards rejection.
+
+Yet the referee is not an expert in Java programs and code execution, so would not oppose acceptance.
+----------- Best Paper? -----------
+SELECTION: no

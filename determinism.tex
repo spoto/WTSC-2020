@@ -80,26 +80,25 @@ even on a specific library implementation, and no
 condition can be sensibly devised to make its behavior deterministic.}\label{fig:determinism}
 \end{figure}
 
-Fig.~\ref{fig:determinism} reports some examples of methods
-from the Java library, classified
+Fig.~\ref{fig:determinism} reports examples of Java library methods, classified
 on the basis of the kind of determinism that holds for them.
 We discuss them below. We recall that, in Java, a method call
 \<o.m(pars)> specifies its \emph{receiver} \<o> and
-its \emph{static target} \<C.m(types)>, that is, a method signature
+its \emph{static target} \<C.m(types)>, that is, a signature
 reporting the class \<C> from where method \<m> with formal
 arguments of type \<types> must be looked for.
 Note that \<C> and \<types> do not include generic type parameters, if any, since
-they are erased during compilation from Java to Java bytecode and our
-instrumentation works at bytecode level.
+they are erased during compilation into Java bytecode and our
+instrumentation works on bytecode.
 Since Java is an object-oriented language, the static target is just the specification
 of the method implementation that must be run (the \emph{dynamic} target):
 a non-static method call runs the implementation of \<C.m(types)>
 that is selected by looking up \<m(types)> from the run-time class of \<o> upwards,
-along the superclass chain.\footnote{Java also allows so-called \emph{special} calls, such as
+along the superclass chain\footnote{Java also allows so-called \emph{special} calls, such as
    \<super.m()>, that start the look-up from a given \emph{static}
    type; as well as calls embedded in closures, such as method references
    (corresponding to \<invokedynamic> in Java bytecode). For simplicity,
-   these calls are not discussed here, but our implementation deals with them.}
+   these calls are not discussed here, but our implementation deals with them.}.
 Hence, any implementation of \<m(types)> in \<C> or in any of its
 subtypes can be run. For instance, a call \<o.intValue()> with static target \<Number.intValue()>
 can be called on any object \<o> that extends
@@ -237,6 +236,8 @@ more expensive sibling \<LinkedHashSet>, whose iteration order is fixed.
 But then method \<add()> would still be non-deterministic, since its gas consumption
 is affected by the shape of the buckets, as discussed later.
 Moreover, programmers use \<HashSet> extensively
+(it is possibly the fifth most used library class:
+\url{https://javapapers.com/core-java/top-10-java-classes})
 and would be annoyed if it were
 banned. It is much better to observe that,
 if the \<hashCode()> of all its elements has been redefined in a deterministic way
@@ -283,7 +284,7 @@ at least two distinct positive \<Integer>s:
 %
 %List<Integer> list = ...
 \begin{verbatim}
-int positive = list.stream().parallel().mapToInt(Integer::intValue)
+int pos = list.stream().parallel().mapToInt(Integer::intValue)
   .filter(i -> i > 0).findAny().getAsInt();
 \end{verbatim}
 %

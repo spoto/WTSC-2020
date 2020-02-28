@@ -12,7 +12,7 @@ an Intel 4-Core i3-4150 at $3.50$GHz with 16GB of RAM, running Linux Ubuntu 18.0
 %contained in the jars in Fig.~\ref{fig:experiments};
 %(3) the same jars, instrumented without the addition of the run-time white-listing
 %checks; and (4) the same jars, instrumented with the addition of such checks.
-
+%
 \begin{figure}[t]
   \begin{center}
 {\small\begin{tabular}{|l||r|r|r||r|r||r|}
@@ -44,44 +44,44 @@ an Intel 4-Core i3-4150 at $3.50$GHz with 16GB of RAM, running Linux Ubuntu 18.0
     \emph{instr.\ time} is the time for computing such instrumented jars (in milliseconds).}
   \label{fig:experiments}
   \end{figure}
-
-Fig.~\ref{fig:experiments} reports the Java archives (jars) used for the experiments.
-They contain contracts for auctions (\<auctions.jar>), for storage of
+%
+Fig.~\ref{fig:experiments} reports the Java archives (jars) for experiments.
+They contain contracts for auction (\<auctions.jar>), for storage of
 objects in blockchain (\<basicdependencies.jar>), for the use of such objects
-as a library (\<basic.jar>), a library of collection classes explicitly developed
-for Takamaka (\<collections.jar>), contracts for crowdfunding (\<crowdfunding.jar>),
-the same run-time support library of Takamaka (\<io-takamaka-code.jar>),
-contracts using the Java collections (\<javacollections.jar>), contracts
+as a library (\<basic.jar>), uses of Takamaka's collection classes
+(\<collections.jar>), contracts for crowdfunding (\<crowdfunding.jar>),
+the run-time support of Takamaka (\<io-takamaka-code.jar>),
+contracts using Java collections (\<javacollections.jar>), contracts
 testing lambda expressions (\<lambdas.jar>), Ponzi contracts
 (\<ponzi.jar>), a remote purchase contract (\<purchase.jar>), a tic-tac-toe
-game contract (\<tictactoe.jar>) and contracts for electronic voting (\<voting.jar>).
+game (\<tictactoe.jar>) and contracts for electronic voting (\<voting.jar>).
 
-Column \#m of Fig.~\ref{fig:experiments} reports how many calls to constructors
-or methods of the Java library occur in the code. Our implementation
+Column \#m of Fig.~\ref{fig:experiments} counts the calls to constructors
+or methods of the Java library. Our implementation
 uses an extension of the fragment in Fig.~\ref{fig:fragment}
 %(included in the companion archive)
-and verified that all those calls are white-listed.
+and verifies that all those calls are white-listed.
 However, a few of them require to enforce run-time conditions for determinism
-(Sec.~\ref{sec:enforcing}); namely, column \#c counts such conditions;
-of these, our implementation could statically discharge \#d, at instrumentation time,
+(Sec.~\ref{sec:enforcing}): column \#c counts such conditions;
+of these, our implementation statically discharged \#d, at instrumentation time,
 through static analysis; that is, these needn't
-be checked at run time, since these checks are eliminated by the simple
+be checked at run time, since these checks are eliminated by the
 static analysis of Sec.~\ref{subsec:static_vs_dynamic}. The remaining
-$\#c - \#d$ require the addition of run-time checks in the instrumented jar. Consequently,
+$\#c - \#d$ require to add run-time checks in the instrumented jar. Consequently,
 when $\#c - \#d > 0$, extra code is instrumented into the jars, as it can be seen by comparing
 columns \emph{without} and \emph{with} in Fig.~\ref{fig:experiments}. These
-show that the extra checks induce a very small inflation of the instrumented jars.
-Finally, Fig.~\ref{fig:experiments} reports the time for instrumentation, in milliseconds.
+show that the extra checks induce a small inflation of the jars.
+Finally, Fig.~\ref{fig:experiments} reports time for instrumentation, in milliseconds.
 We computed it for columns \emph{with} and \emph{without}, but the results
 (reported in the figure) were identical. This means that the time for
 checking if method calls are white-listed and for adding run-time checks for white-listing
 conditions is very small.
 In order to investigate if the extra run-time checks for the $\#c - \#d$ conditions
 slow down the code, we have run 113 JUnit tests, that trigger blockchain transactions
-that execute the instrumented code of the jars in Fig.~\ref{fig:experiments}
-(these tests are in the companion archive). The total time for running the
+that execute the instrumented code of the jars in Fig.~\ref{fig:experiments}.
+The total time for running the
 tests (115 seconds) was the same both with and without
 the addition of the run-time checks, which shows that
 these do not actually slow down the execution. Note that the code without run-time checks
-is still instrumentated for running on a blockchain. We cannot compare with fully uninstrumented code
+is still instrumented for running on a blockchain. Hence, we cannot compare with fully uninstrumented code
 since it cannot be run~\cite{Spoto19}.

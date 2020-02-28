@@ -32,11 +32,11 @@ for a Ponzi pyramid scheme consists of~39 non-blank non-comment lines of code
 long. % (it can be found in the companion archive,
 %see Sec.~\ref{sec:experiments}).
 Java has a large and powerful toolbelt and an active community.
-Also other blockchains~\cite{aion,aion_example_contract,neo,neo_contract,Spoto19}
+Also other blockchains~\cite{aion_example_contract,neo_contract,Spoto19}
 let programmers code in a limited subset of Java.
-It is true that Solidity has native features for smart contracts, such as
+Solidity has native features for smart contracts, such as
 \<payable> functions, but the same can be obtained in Java through instrumentation~\cite{Spoto19}.
-
+%
 One of the most compelling reasons for writing smart contracts
 in a mainstream language such as Java is that it comes with a large
 support library, that provides general solutions to typical programming problems.
@@ -51,7 +51,7 @@ in the sense that code execution, if non-deterministic, gets rejected~\cite{Vuko
 Hence, also in this case, programmers should avoid non-determinism, if they want their code to be run.
 Non-determinism can be allowed in smart contracts for the generation of random numbers~\cite{ChatterjeeGP19}, but that
 technique does not apply to other forms of non-determinism.
-
+%
 Non-determinism is obvious for library classes and methods that perform, explicitly,
 parallel or random computations. But the real problem is that
 also some library parts, that are explicitly sequential, might lead to
@@ -61,7 +61,7 @@ bugs also in traditional software. For smart contracts, however,
 this situation cannot be tolerated: the execution of the same code, from the same state,
 \emph{must} lead to the same result in any two distinct blockchain nodes.
 
-A solution could be to write a special Java library, whose
+Once could write a special Java library, whose
 methods are made deterministic. But this is far from simple, since the Java library is huge
 and determinism would require to modify very low-level aspects of the same virtual machine, such as
 its memory allocation strategy and its garbage collectors.
@@ -80,20 +80,20 @@ the white-listed sandbox is safe.
 
 Namely, the contributions of this paper are a discussion of the (non-)determi\-nism
 of the Java library methods; a way for specifying deterministic fragments
-of that library; a technique for
-enforcing some run-time conditions needed for determinism, statically or dynamically;
-an implementation of the technique, that is currently part of the verification
+of that library; a technique to enforce
+some run-time conditions for determinism, statically or dynamically;
+an implementation of the technique, currently part of the verification
 layer for Java smart contracts of the Takamaka blockchain;
 experiments with that implementation.
-Its deterministic fragment has been specified manually, since there is
-currently no automatic way of proving that a method is deterministic.
-The Takamaka blockchain verifies and then instruments the code of the smart contracts, that gets
-then installed, in instrumented form, in blockchain~\cite{Spoto19}. Later, transactions execute the
+Our deterministic fragment has been selected manually, since there is
+currently no automatic way to prove that a method is deterministic.
+The Takamaka blockchain verifies, instruments and installs in blockchain the code of the smart
+contracts, in instrumented form~\cite{Spoto19}. Later, transactions execute the
 instrumented code, never the original one. All nodes perform verification and instrumentation
 and must agree on the result. An attacker cannot modify the instrumented program
 or its execution semantics after it has been installed in blockchain.
 The motivation of the original instrumentation goes beyond the issue on determinism;
-we refer to~\cite{Spoto19} for its description, while this paper describes its use for enforcing
+we refer to~\cite{Spoto19} for its description: this paper describes its use for enforcing
 determinism only.
 
 This work is organized as follows.
@@ -105,11 +105,11 @@ Its definition can use run-time conditions on the way its methods are called.
 Sec.~\ref{sec:enforcing} provides a technique for enforcing such conditions, dynamically
 or statically, through bytecode instrumentation.
 Sec.~\ref{sec:experiments} reports experiments with an implementation.
-
+%
 This paper is \emph{not} about Java smart contracts themselves. The interested reader
 is referred to the references provided above and, in particular, to~\cite{Spoto19}
 and to the tutorial about Takamaka smart contracts in
-Java\footnote{Available at \url{https://www.takamaka.dev/docs/Takamaka.html}}.
+Java (\url{https://www.takamaka.dev/docs/Takamaka.html}).
 %Hence, this paper does not tackle
 %the specific syntax, methods and technology needed for writing smart contracts in Java.
 %Examples are presented in an abstract way, unrelated to any specific

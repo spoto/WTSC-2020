@@ -8,10 +8,10 @@ is a proof-obligation that must be discharged: if this is not possible, the smar
 cannot be executed or, at least, its execution must be aborted. This section shows how
 this is possible.
 
-Very likely, a blockchain node receives the smart contract already compiled in Java bytecode.
-The idea is hence to let the node instrument such bytecode, only the first time it is installed in blockchain,
-with extra checks that, at each subsequent execution, verify the run-time conditions.
-To make the technique more accessible to the reader, this section presents
+Very likely, a blockchain node receives the compiled contract in Java bytecode.
+The idea is to let it instrument such bytecode, only the first time it is installed in blockchain,
+with checks that, at each subsequent run, verify the run-time conditions.
+For simplicity, this section presents
 the instrumentation at source-code level, but it actually works at bytecode level.
 
 Assume that a blockchain node verifies that smart contracts obey to the deterministic
@@ -71,14 +71,14 @@ code is not reported for space limitations.
 %If that is the case, then the value does not redefine \<hashCode()> from \<Object>
 %and the transaction gets aborted.
 
-For another example, assume that the smart contract calls
+For another example, assume that a smart contract calls
 \<x.toString()>, with static target \<Object.toString()>.
 The blockchain node spots this syntactically,
 consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCodeOrToString> on
 \<x> (Fig.~\ref{fig:fragment}).
-Consequently, it replaces \<x.toString()> with \<toString\_0(x)> and adds
-the verification method:
+Hence, it replaces \<x.toString()> with \<toString\_0(x)> and adds
+the method:
 
 {\small\begin{verbatim}
 private static toString_0(Object receiver) {
@@ -92,24 +92,24 @@ At each run of the contract,
 \<Support.mustRedefineHashCodeOrToString(receiver)> will be executed later,
 that checks the condition by reflection.
 
-Assume that the smart contract contains a static call
+Assume that a smart contract contains a static call
 \<StreamSupport.stream(s, p)>, whose static target is
 \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)>,
 and that the white-listed fragment of the blockchain node allows that signature,
-but has a run-time condition on \<p> that avoids the creation of parallel streams:
+but has a run-time condition on \<p> to avoid creation of parallel streams:
 \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, @MustBeFalse boolean p)>.
 The node replaces \<StreamSupport.stream(s, p)> with \<stream\_0(s, p)> and adds
-the verification method:
+the method:
 
 {\small\begin{verbatim}
 private static Stream<T> stream_0(Spliterator<T> par_0, boolean par_1) {
-  Support.mustBeFalse(par_1);
+  Support.mustBeFalse(par_1); // aborts transaction if par_1 is false
   return StreamSupport.stream(par_0, par_1);
 }
 \end{verbatim}}
 
-\noindent
-\<Support.mustBeFalse(value)> aborts the current transaction when \<value> is false.
+%\noindent
+%\<Support.mustBeFalse(value)> aborts the current transaction when \<value> is false.
 
 %{\small\begin{verbatim}
 %public static void mustBeFalse(boolean value) {
@@ -128,7 +128,7 @@ private static Stream<T> stream_0(Spliterator<T> par_0, boolean par_1) {
 \subsection{Static vs.\ Dynamic}\label{subsec:static_vs_dynamic}
 
 The instrumentation technique described above adds dynamic checks on run-time values,
-that will be triggered during each subsequent transaction.
+triggered during each subsequent transaction.
 Hence, checks are performed repeatedly, every time an annotated white-listed method
 is executed. This can incur in a performance penalty. It would be better
 to check, once and for all,
@@ -142,9 +142,8 @@ only in some cases. Hence, a blockchain node can use static analysis to discharg
 the proof-obligations due to run-time conditions on white-listed methods. If it
 succeeds with a definite answer, stating that a given condition definitely holds,
 the node needn't generate any verification method for that condition. Otherwise, it
-adds the verification method, as last resort.
-
-Static analysis can be more or less aggressive.
+adds the verification method.
+%
 More aggressive static analyses discharge more proof-obligations statically,
 which is desirable since the smart contract's code will check less
 conditions at run-time. However, aggressive analyses are typically more expensive
@@ -152,16 +151,16 @@ conditions at run-time. However, aggressive analyses are typically more expensiv
 blockchain). In practice, a good trade-off should be found between the power of the analysis
 and its cost.
 
-Our implementation uses static type information to infer, statically, if a condition
-\<@MustRedefineHashCode> or \<@MustRedefineHashCodeOrToString> holds for a variable \<v>.
-If the static type
+Our implementation uses static types to infer if
+\<@MustRedefineHashCode> or \<@MustRedefineHashCodeOrToString> holds for a variable \<v>,
+statically. If the static type
 $\tau$ of \<v> is a class that redefines \<Object.hashCode()> or \<Object.toString()>,
-the same must hold for the dynamic type $\tau'$ of \<v>, that can only be an
-instance of $\tau$. Hence the run-time condition must hold, always.
-This follows from the fact that Java and Java bytecode
-are strongly-typed. Otherwise, the verification method is added for that condition.
+the same must hold for \<v>'s dynamic type $\tau'$, that can only be an
+instance of $\tau$ (since Java and Java bytecode are strongly-typed),
+and the run-time condition holds, always.
+Otherwise, a verification method is added for that condition.
 For \<@MustBeFalse>, our implementation looks, intra-procedurally, for
 the producers of the annotated value.
 If these are always the literal \<false>, then the condition holds.
 If, instead, at least one producer is the literal \<true> or a complex expression,
-then the static analysis gives up and the verification method is added.
+the static analysis gives up and the verification method is added.

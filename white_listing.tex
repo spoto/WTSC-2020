@@ -23,7 +23,7 @@ or otherwise aborts their execution in blockchain.
       in $P$ has a static target that is either in contract code, or
       in $\wl$ or overrides a signature in $\wl$
       (syntactical check); and
-    \item in every execution of $P$, the run-time conditions in $\wl$ hold (semantical check).
+    \item in every execution of $P$, $\wl$'s run-time conditions hold (semantical check).
   \end{enumerate}
 \end{definition}
 %
@@ -79,9 +79,8 @@ Then one can define
 %
 \[
 \wl_5=\left\{\begin{array}{c}
-\mbox{\<Object()>},\\
+\mbox{\<Object()>}, \mbox{\<HashSet$\text{<}$E$\text{>}$()>},\\
 \mbox{\<@MustRedefineHashCodeOrToString Object.toString()>},\\
-\mbox{\<HashSet$\text{<}$E$\text{>}$()>},\\
 \mbox{\<Collection$\text{<}$E$\text{>}$.add(@MustRedefineHashCode E e)>}
 \end{array}\right\}
 \]
@@ -231,27 +230,24 @@ on collections, streams derived from collections and \<toString()> on collection
 deterministic. The latter can be called on collections since they redefine it,
 hence satisfying the constraint for \<Object>.
 
-It is interesting to observe that method
+Interestingly, method
 \<contains(Object o)> in \<Collection> (Fig.~\ref{fig:fragment})
 requires \<o> to redefine \<hashCode()>
 or otherwise, for hashsets, the bucket where \<o> is looked for might be different
 for different runs, with subsequent non-determinism.
-That constraint has been lifted for \<contains(Object o)> in \<List>
-(Fig.~\ref{fig:fragment}), since its implementation, for lists,
-scans the list from head to tail,
-looking for an \<equals()> element, with deterministic behavior,
-regardless of \<o> having redefined \<hashCode()> or not. This is an application
-of the Liskov substitution principle~\cite{LiskovW94}:
-remember that that principle, for formal arguments, works by generalization:
-hence white-listing constraints on formal arguments can be weakened in subclasses,
-but not strengthened. The same for \<remove(Object o)>, passing from
-\<Collection> to \<List>.
+That constraint is not needed for \<contains(Object o)> in \<List>
+(Fig.~\ref{fig:fragment}), that scans the list from its head,
+looking for an \<equals()> element, deterministically,
+regardless of \<o> having redefined \<hashCode()> or not. This is consistent with
+Liskov's substitution principle~\cite{LiskovW94} that,
+for formal arguments, works by generalization:
+hence white-listing constraints on formal arguments can be weakened, not strengthened,
+in subclasses. The same for \<remove(Object o)>, passing from \<Collection> to \<List>.
 
-There is no single largest deterministic fragment
-for a given set of classes and interfaces. For instance, 
-another deterministic fragment for the same classes in
-Fig.~\ref{fig:fragment} is identical
-but for allowing any elements in lists, possibly not redefining
+There is no largest deterministic fragment
+for a given set of classes and interfaces:
+another deterministic fragment is identical to
+Fig.~\ref{fig:fragment} but for allowing any elements in lists, possibly not redefining
 \<hashCode()> (hence more permissive);
 forbidding \<Object.toString()> and \<Object.hashCode()> altogether,
 since it would now be non-deterministic on lists (hence

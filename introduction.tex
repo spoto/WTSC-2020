@@ -3,7 +3,7 @@
 Smart contracts are programs that specify the effects of running blockchain transactions.
 They are written in specialized languages, that take into account
 the fact that they operate on data kept in blockchain. They must
-support some special concepts, such as the access to the caller of a transaction,
+support some special concepts, such as a reference to the caller of a transaction,
 monetary transfers between contracts
 and payment of code execution through \emph{gas}.
 Such concepts are not natively available
@@ -13,7 +13,7 @@ can be seen as a language for smart contracts,
 although non-Turing equivalent and mostly limited to coin transfers. The more
 powerful Solidity~\cite{AntonopoulosW18},
 compiled into Ethereum bytecode, allows one to code
-complex smart contracts, in an imperative high-level language, and is
+complex smart contracts in an imperative high-level language, and is
 one of the main reasons behind the success of Ethereum.
 
 Recently, there have been efforts towards the use of traditional
@@ -50,7 +50,7 @@ consensus cannot be reached. Hyperledger Fabric allows instead non-determinism,
 in the sense that code execution, if non-deterministic, gets rejected~\cite{Vukolic17}.
 Hence, also in this case, programmers should avoid non-determinism, if they want their code to be run.
 Non-determinism can be allowed in smart contracts for the generation of random numbers~\cite{ChatterjeeGP19}, but that
-technique does not apply to other forms of non-determinism.
+technique does not extend to other forms of non-determinism.
 %
 Non-determinism is obvious for library classes and methods that perform, explicitly,
 parallel or random computations. But the real problem is that
@@ -61,7 +61,7 @@ bugs also in traditional software. For smart contracts, however,
 this situation cannot be tolerated: the execution of the same code, from the same state,
 \emph{must} lead to the same result in any two distinct blockchain nodes.
 
-Once could write a special Java library, whose
+A possible solution could be to write a special Java library, whose
 methods are made deterministic. But this is far from simple, since the Java library is huge
 and determinism would require to modify very low-level aspects of the same virtual machine, such as
 its memory allocation strategy and its garbage collectors.

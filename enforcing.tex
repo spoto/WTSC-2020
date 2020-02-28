@@ -19,10 +19,10 @@ fragment in Fig.~\ref{fig:fragment}.
 Assume that a user installs in blockchain a smart contract whose
 code contains \<collection.remove(element)>, whose static target is
 \<Collection$\text{<}$E$\text{>}$.remove(Object o)>.
-The node spots this syntactically.\footnote{The Java bytecode of the
+The node spots this syntactically\footnote{The Java bytecode of the
   smart contract will
   contain an instruction \<invokeinterface java.util.Collection.remove(Object):boolean>,
-  or a similar one for a subtype of \<Collection>.}
+  or a similar one for a subtype of \<Collection>.}.
 The node consults its white-listed fragment and recognizes the call as
 white-listed, but having a run-time constraint \<@MustRedefineHashCode> on \<o>
 (Fig.~\ref{fig:fragment}). Hence, during installation of the
@@ -71,7 +71,7 @@ code is not reported for space limitations.
 %If that is the case, then the value does not redefine \<hashCode()> from \<Object>
 %and the transaction gets aborted.
 
-For another example, assume that a smart contract calls
+For another example, assume the smart contract to call
 \<x.toString()>, with static target \<Object.toString()>.
 The blockchain node spots this syntactically,
 consults its white-listed fragment and recognizes the call as
@@ -89,10 +89,10 @@ private static toString_0(Object receiver) {
 
 \noindent
 At each run of the contract,
-\<Support.mustRedefineHashCodeOrToString(receiver)> will be executed later,
-that checks the condition by reflection.
+\<Support.mustRedefineHashCodeOrToString(receiver)> will be executed,
+to check the condition, by reflection.
 
-Assume that a smart contract contains a static call
+Assume the smart contract to contain a static call
 \<StreamSupport.stream(s, p)>, whose static target is
 \<StreamSupport.stream(Spliterator$\text{<}$T$\text{>}$ s, boolean p)>,
 and that the white-listed fragment of the blockchain node allows that signature,
@@ -156,8 +156,8 @@ Our implementation uses static types to infer if
 statically. If the static type
 $\tau$ of \<v> is a class that redefines \<Object.hashCode()> or \<Object.toString()>,
 the same must hold for \<v>'s dynamic type $\tau'$, that can only be an
-instance of $\tau$ (since Java and Java bytecode are strongly-typed),
-and the run-time condition holds, always.
+instance of $\tau$ (since Java and Java bytecode are strongly-typed):
+the run-time condition holds, always.
 Otherwise, a verification method is added for that condition.
 For \<@MustBeFalse>, our implementation looks, intra-procedurally, for
 the producers of the annotated value.

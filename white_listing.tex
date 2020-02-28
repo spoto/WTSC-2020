@@ -88,7 +88,7 @@ Then one can define
 that constrains \<Object.toString()> to be called on values that redefine
 at least one of \<hashCode()> and \<toString()>, and
 \<Collection$\text{<}$E$\text{>}$.add(E e)> to be called
-with an actual parameter that redefines \<hashCode()>. $\wl_5$ is deterministic
+with an actual parameter, for \<e>, that redefines \<hashCode()>. $\wl_5$ is deterministic
 for any given Java library version, thanks
 to such constraints. For instance, the following code is deterministic
 on any Java library:
@@ -107,7 +107,7 @@ At the end, it calls \<toString()> on the
 \<set>, that is a \<HashSet> that redefines \<toString()>,
 hence the constraint
 on \<toString()> holds. By using, for instance, the
-OpenJDK~13 library, variable \<s> will always hold the string
+OpenJDK~14 library, variable \<s> will always hold the string
 \<"[[], 1, hello]">. Other versions of the library might compute different strings but,
 once a library version is fixed, always the same string is computed.
 The reason of this determinism is that the shape of the buckets of the hashset is fixed
@@ -126,7 +126,7 @@ Namely, condition~1 of Def.~\ref{def:obeys} can be verified
 %hierarchy and $|\wl|$ is the size of $\wl$.
 %Namely,
 by following the static target of each call in $P$, upwards,
-and checking if the method is in $\wl$.
+and checking if the method is in the smart conrtacts or in $\wl$.
 %If a total
 %order is defined on method signatures, this last check can be done through binary search,
 %with logarithmic complexity.

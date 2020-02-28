@@ -4,7 +4,7 @@ This section discusses the different kinds of determinism of methods from
 the Java library and what must be required if they are used
 in a language for smart contracts.
 We recall that the Java library exists in different versions, from its first
-$1.0$ edition of 1996 to its $13$ edition of September 2019.
+$1.0$ edition of 1996 to its $14$ edition of March 2020.
 Each version has different implementations, with OpenJDK probably being
 the most used, nowadays. Some classes and methods exist only in some versions of the library.
 For instance, class \<java.lang.Integer> exists from the very first $1.0$ edition,
@@ -141,7 +141,7 @@ use distinct implementations of the Java library. For instance, while
 %\[
 \<Integer.valueOf(3) == Integer.valueOf(3)>
 %\]
-holds in every implementation of the library, since the official documentation requires this method
+holds in every implementation of the library, since the official documentation \emph{requires} this method
 to cache values between $-128$ and $127$, inclusive, there is instead no guarantee that caching is
 used outside that range. Hence
 %\[
@@ -181,7 +181,7 @@ heavily use such calls in their programs, without incurring in
 non-determinism. The reason is that programmers normally
 take care of calling such methods only on objects that redefine
 the default (non-deterministic) implementation of
-\<hashCode()> and \<toString()> in class \<Object>.
+\<hashCode()> and \<toString()> from class \<Object>.
 If that is the case, the calls will actually
 execute the deterministic redefinitions. Hence, it seems sensible
 to allow calls to such methods in smart contracts, but only if their receiver
@@ -244,7 +244,7 @@ if the \<hashCode()> of all its elements has been redefined in a deterministic w
 and if a specific library version is fixed, then the behavior of \<HashSet> becomes
 deterministic, since the shape of the buckets is the same in every run. This means that one
 can allow, in smart contracts, calls to \<iterator()> and \<stream()> on any collection,
-but only under such conditions. Sec.~\ref{sec:enforcing} shows how they can be enforced.
+but only under such conditions. Sec.~\ref{sec:enforcing} shows how such conditions can be enforced.
 
 Consider method \<add(E e)> of \<Collection$\text{<}$E$\text{>}$>.
 It adds an element \<e> to the collection. For a given library version,
@@ -276,7 +276,7 @@ the run-time conditions that entail determinism must be somehow enforced.
 %\subsubsection*{Never Deterministic Methods.}
 Static method \<System.currentTimeMillis()>, in \<java.lang.System>,
 yields the number of milliseconds elapsed since the beginning of 1970.
-Not surprisingly, it will yield different measures in different blockchain nodes.
+Not surprisingly, it will yield different values for different runs.
 Such an inherently non-deterministic method cannot be used in a smart contract.
 Consider method \<parallel()> of \<java.util.stream.BaseStream> now.
 It yields a parallel version of a stream. For instance, if \<list> is a list with
